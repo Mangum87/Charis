@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "292305817112",
+    "firebase_url": "https://charisdb-58dce.firebaseio.com",
+    "project_id": "charisdb-58dce",
+    "storage_bucket": "charisdb-58dce.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:292305817112:android:be3dd143eda67ce962bd6d",
+        "android_client_info": {
+          "package_name": "com.charis"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "292305817112-d2fdm6j61aasvfnd6ktm3r4aecgbant6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlHLVWJ3q3PGSnrodRWly1NMjT8UVXOYU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "292305817112-d2fdm6j61aasvfnd6ktm3r4aecgbant6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
