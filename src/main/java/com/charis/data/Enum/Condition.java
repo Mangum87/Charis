@@ -25,6 +25,18 @@ public enum Condition
 
 
     /**
+     * Returns a Condition object from corresponding long.
+     * @param c long to translate
+     * @return Condition object
+     */
+    public static Condition toCondition(long c)
+    {
+        String s = String.valueOf(c); // Convert to string
+        return toCondition(Integer.valueOf(s)); // Convert to int
+    }
+
+
+    /**
      * Returns the int equivalent of given Condition.
      * @param c Condition object
      * @return int equivalent of c
