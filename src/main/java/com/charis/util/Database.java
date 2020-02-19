@@ -289,10 +289,13 @@ public final class Database
      * Updates category with attributes in c.
      * @param c Category to update
      */
-    public void updateCategory(Category c)
+    public boolean updateCategory(Category c)
     {
         DocumentReference ref = getDatabase().collection("Category").document(c.getID());
-        ref.update("name", c.getName());
+        Task t = ref.update("name", c.getName());
+        waitForResponse(t);
+
+        return t.isSuccessful();
     }
 
 
@@ -359,7 +362,7 @@ public final class Database
      * @param price Price of item
      * @param cat Category of item
      */
-    public boolean createItem(String id, Date rec, String desc, Condition cond, double price, Category cat)
+    private boolean createItem(String id, Date rec, String desc, Condition cond, double price, Category cat)
     {
         HashMap<String, Object> map = new HashMap();
         map.put("ID", id);
@@ -383,8 +386,13 @@ public final class Database
      * @param loc Location of item
      * @return True if successful
      */
-    public boolean createSellableItem(String id, int quantity, Location loc)
+    public boolean createSellableItem(String id, Date rec, String desc, Condition cond, double price, Category cat, int quantity, Location loc)
     {
+        boolean suc = createItem(id, rec, desc, cond, price, cat); // Make document in Item collection
+        if(!suc)
+            return false;
+
+
         HashMap<String, Object> map = new HashMap();
         map.put("quantity", quantity);
         map.put("location", loc.getID());
@@ -405,8 +413,13 @@ public final class Database
      * @param loc Location of item
      * @return True if successful
      */
-    public boolean createNonSellableItem(String id, String source, int quantity, Location loc)
+    public boolean createNonSellableItem(String id, Date rec, String desc, Condition cond, double price, Category cat, String source, int quantity, Location loc)
     {
+        boolean suc = createItem(id, rec, desc, cond, price, cat); // Make document in Item collection
+        if(!suc)
+            return false;
+
+
         HashMap<String, Object> map = new HashMap();
         map.put("source", source);
         map.put("quantity", quantity);
@@ -446,6 +459,7 @@ public final class Database
         Task t = getDatabase().collection("NonSellable").document(id).get();
         waitForResponse(t);
 
+
         if(t.isSuccessful())
         {
             QuerySnapshot snap = (QuerySnapshot) t.getResult();
@@ -460,6 +474,49 @@ public final class Database
         else
             return null;
     }
+
+
+    /**
+     * Returns a sellable object from the database
+     * with the given ID.
+     * @param id Barcode of item
+     * @return Null if read failed
+     */
+    public SellableItem getSellableItem(String id)
+    {
+        // Get rest of item info
+        DocumentSnapshot itemSnap = getItem(id);
+        if(itemSnap == null) /// Check for success
+            return null;
+
+        // Pull info from item snapshot
+        Date received = itemSnap.getDate("received");
+        String desc = itemSnap.getString("description");
+        Condition cond = Condition.toCondition(itemSnap.getLong("condition"));
+        double amount = itemSnap.getDouble("amount");
+        Category cat = getCategory(itemSnap.getString("category"));
+
+
+
+        // Pull from Sellable collection
+        Task t = getDatabase().collection("Sellable").document(id).get();
+        waitForResponse(t);
+
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot snap = (QuerySnapshot) t.getResult();
+            DocumentSnapshot docs = snap.getDocuments().get(0); // Should only return one result
+
+            int quantity = Integer.valueOf(String.valueOf(docs.getLong("quantity")));
+            Location loc = getLocation(docs.getString("location"));
+
+            return new SellableItem(id, received, desc, quantity, cond, amount, cat, loc);
+        }
+        else
+            return null;
+    }
+
 
 
     /**
@@ -723,6 +780,7 @@ public final class Database
 
         return items;
     }
+
 
 
     /**
