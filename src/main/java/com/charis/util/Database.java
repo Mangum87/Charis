@@ -4,6 +4,7 @@ import com.charis.data.Category;
 import com.charis.data.Distribution;
 import com.charis.data.Enum.Condition;
 import com.charis.data.Item;
+import com.charis.data.Kit;
 import com.charis.data.Location;
 import com.charis.data.NonSellableItem;
 import com.charis.data.SellableItem;
@@ -15,6 +16,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
+
 
 import java.util.Calendar;
 import java.util.Date;
@@ -121,7 +123,7 @@ public final class Database
      * @param user User who performed transaction
      * @return Distribution object with given data
      */
-    public Distribution createDistribution(double amount, Date date, User user)
+    private Distribution createDistribution(double amount, Date date, User user)
     {
         HashMap<String, Object> map = new HashMap();
         map.put("amount", amount);
@@ -192,7 +194,6 @@ public final class Database
             {
                 String id = list.get(i).getId();
                 double amount = list.get(i).getDouble("amount");
-                //Date date = new Date(list.get(i).getTimestamp("date").getSeconds());
                 Date date = list.get(i).getDate("date");
                 User u = getUser(list.get(i).getString("user"));
 
@@ -207,6 +208,66 @@ public final class Database
 
 
     /**
+     * Creates a location in the database.
+     * @param name Name of location
+     * @return Location object
+     */
+    public Location createLocation(String name)
+    {
+        HashMap<String, Object> map = new HashMap();
+        map.put("name", name);
+
+
+        Task t = getDatabase().collection("Location").add(map);
+        waitForResponse(t);
+
+
+        DocumentReference ref = (DocumentReference) t.getResult();
+        return new Location(ref.getId(), name);
+    }
+
+
+    /**
+     * Returns a locatino from the database.
+     * @param id ID of location
+     * @return Null if read failed
+     */
+    public Location getLocation(String id)
+    {
+        Task t = getDatabase().collection("Location").document(id).get();
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot snap = (QuerySnapshot) t.getResult();
+            DocumentSnapshot doc = snap.getDocuments().get(0);
+
+            return new Location(id, doc.getString("name"));
+        }
+        else
+            return null;
+    }
+
+
+    /**
+     * Update location with given object data.
+     * @param loc Location to update
+     * @return True if successful
+     */
+    public boolean updateLocation(Location loc)
+    {
+        if (loc == null)
+            return false;
+
+        DocumentReference ref = getDatabase().collection("Location").document(loc.getID());
+        Task t = ref.update("name", loc.getName());
+        waitForResponse(t);
+
+        return t.isSuccessful();
+    }
+
+
+    /**
      * Creates a category record in the database.
      * @param name Name of category
      * @return Category object with given data
@@ -216,7 +277,7 @@ public final class Database
         HashMap<String, Object> map = new HashMap();
         map.put("name", name);
 
-        Task t = getDatabase().collection("Item").add(map);
+        Task t = getDatabase().collection("Category").add(map);
         waitForResponse(t);
         DocumentReference ref = (DocumentReference) t.getResult();
 
@@ -232,6 +293,29 @@ public final class Database
     {
         DocumentReference ref = getDatabase().collection("Category").document(c.getID());
         ref.update("name", c.getName());
+    }
+
+
+    /**
+     * Returns category with given ID.
+     * @param id ID of category
+     * @return Null if failed to read
+     */
+    public Category getCategory(String id)
+    {
+        Task t = getDatabase().collection("Category").document(id).get();
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot snap = (QuerySnapshot) t.getResult();
+            List<DocumentSnapshot> doc = snap.getDocuments();
+
+            String name = doc.get(0).getString("name");
+            return new Category(doc.get(0).getId(), name);
+        }
+        else
+            return null;
     }
 
 
@@ -337,16 +421,98 @@ public final class Database
 
 
     /**
-     * Updates the item with attributes in the object.
-     * @param item Item to update
-     * @return True if successful update
+     * Returns a nonsellable object from the database
+     * with the given ID.
+     * @param id Barcode of item
+     * @return Null if read failed
      */
-    public boolean updateItem(Item item)
+    public NonSellableItem getNonSellableItem(String id)
+    {
+        // Get rest of item info
+        DocumentSnapshot itemSnap = getItem(id);
+        if(itemSnap == null) /// Check for success
+            return null;
+
+        // Pull info from item snapshot
+        Date received = itemSnap.getDate("received");
+        String desc = itemSnap.getString("description");
+        Condition cond = Condition.toCondition(itemSnap.getLong("condition"));
+        double amount = itemSnap.getDouble("amount");
+        Category cat = getCategory(itemSnap.getString("category"));
+
+
+
+        // Pull from NonSellable collection
+        Task t = getDatabase().collection("NonSellable").document(id).get();
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot snap = (QuerySnapshot) t.getResult();
+            DocumentSnapshot docs = snap.getDocuments().get(0); // Should only return one result
+
+            String source = docs.getString("source");
+            int quantity = Integer.valueOf(String.valueOf(docs.getLong("quantity")));
+            Location loc = getLocation(docs.getString("location"));
+
+            return new NonSellableItem(id, received, desc, quantity, cond, amount, cat, source, loc);
+        }
+        else
+            return null;
+    }
+
+
+    /**
+     * Updates the quantity of the passed sellable item to
+     * the database. Use this function instead of
+     * updateItem() to save database read and writes.
+     * @param item Item to update
+     * @return True if successful
+     */
+    public boolean updateItemQuantity(SellableItem item)
     {
         if(item == null)
             return false;
 
 
+        DocumentReference ref = getDatabase().collection("Sellable").document(item.getID());
+        Task t = ref.update("quantity", item.getQuantity());
+
+        waitForResponse(t);
+
+        return t.isSuccessful();
+    }
+
+
+    /**
+     * Updates the quantity of the passed sellable item to
+     * the database. Use this function instead of
+     * updateItem() to save database read and writes.
+     * @param item Item to update
+     * @return True if successful
+     */
+    public boolean updateItemQuantity(NonSellableItem item)
+    {
+        if(item == null)
+            return false;
+
+
+        DocumentReference ref = getDatabase().collection("NonSellable").document(item.getID());
+        Task t = ref.update("quantity", item.getQuantity());
+
+        waitForResponse(t);
+
+        return t.isSuccessful();
+    }
+
+
+    /**
+     * Updates the item with attributes in the object.
+     * @param item Item to update
+     * @return True if successful update
+     */
+    private boolean updateItem(Item item)
+    {
         DocumentReference ref = getDatabase().collection("Item").document(item.getID());
         Task t1 = ref.update("received", new Timestamp(item.getReceived()));
         Task t2 = ref.update("description", item.getDescription());
@@ -359,21 +525,20 @@ public final class Database
         waitForResponse(t3);
         waitForResponse(t4);
 
-        // Update subclasses
-        if(item instanceof SellableItem)
-            return updateSellable(item);
-        else
-            return updateNonSellable(item);
+        return (t1.isSuccessful() && t2.isSuccessful() && t3.isSuccessful() && t4.isSuccessful());
     }
 
 
     /**
-     * Updates the sellable document.
+     * Updates the sellable document with ID in item.
      * @param item Item to update
      * @return True if successful
      */
-    private boolean updateSellable(Item item)
+    public boolean updateSellable(Item item)
     {
+        if(item == null)
+            return false;
+
         DocumentReference ref = getDatabase().collection("Sellable").document(item.getID());
         Task t1 = ref.update("quantity", item.getQuantity());
         Task t2 = ref.update("location", item.getLocation());
@@ -381,17 +546,23 @@ public final class Database
         waitForResponse(t1);
         waitForResponse(t2);
 
-        return (t1.isSuccessful() && t2.isSuccessful());
+        if (t1.isSuccessful() && t2.isSuccessful())
+            return updateItem(item);
+        else
+            return false;
     }
 
 
     /**
-     * Updates the nonsellable document.
+     * Updates the nonsellable document with ID in item.
      * @param item Item to update
      * @return True is successful
      */
-    private boolean updateNonSellable(Item item)
+    public boolean updateNonSellable(NonSellableItem item)
     {
+        if(item == null)
+            return false;
+
         DocumentReference ref = getDatabase().collection("NonSellable").document(item.getID());
         Task t1 = ref.update("source", ((NonSellableItem)item).getSource());
         Task t2 = ref.update("quantity", item.getQuantity());
@@ -401,7 +572,271 @@ public final class Database
         waitForResponse(t2);
         waitForResponse(t3);
 
-        return (t1.isSuccessful() && t2.isSuccessful() && t3.isSuccessful());
+        if (t1.isSuccessful() && t2.isSuccessful() && t3.isSuccessful())
+            return updateItem(item);
+        else
+            return false;
+    }
+
+
+    /**
+     * Create a distribution of sellable items in the database.
+     * item and quantity are arrays of items and the number of each item sold
+     * and should be ordered with matching indices.
+     * @param item Array of items in distribution
+     * @param quantity Array of quantities of each item sold
+     * @param amount Total + tax of sale
+     * @param date Date of sale
+     * @param user User who performed sale
+     * @return True if successful
+     */
+    public boolean createDistItemRelation(SellableItem[] item, int[] quantity, double amount, Date date, User user)
+    {
+        if(item.length != quantity.length) // Stop if arrays are different lengths
+            return false;
+
+
+        Distribution dist = createDistribution(amount, date, user); // Make distribution
+        if(dist == null)
+            return false;
+
+        boolean suc;
+        for(int i = 0; i < item.length; i++)
+        {
+            HashMap<String, Object> map = new HashMap();
+            map.put("item", item[i].getID());
+            map.put("dist", dist.getID());
+            map.put("quantity", quantity[i]);
+
+            // Create dist_item
+            String doc = dist.getID() + "_" + item[i].getID();
+            DocumentReference ref = getDatabase().collection("Dist_Item").document(doc);
+            ref.set(map);
+
+            // Update quantity in stock
+            item[i].decreaseQuantity(quantity[i]);
+            suc = updateItemQuantity(item[i]);
+
+            if(!suc) // If not successful save
+                return false;
+        }
+
+        return true;
+    }
+
+
+    /**
+     * Create a distribution of nonsellable items in the database.
+     * item and quantity are arrays of items and the number of each item sold
+     * and should be ordered with matching indices.
+     * @param item Array of items in distribution
+     * @param quantity Array of quantities of each item sold
+     * @param amount Total + tax of sale
+     * @param date Date of sale
+     * @param user User who performed sale
+     * @return True if successful
+     */
+    public boolean createDistItemRelation(NonSellableItem[] item, int[] quantity, double amount, Date date, User user)
+    {
+        if(item.length != quantity.length) // Stop if arrays are different lengths
+            return false;
+
+
+        Distribution dist = createDistribution(amount, date, user); // Make distribution
+        if(dist == null)
+            return false;
+
+        boolean suc;
+        for(int i = 0; i < item.length; i++)
+        {
+            HashMap<String, Object> map = new HashMap();
+            map.put("item", item[i].getID());
+            map.put("dist", dist.getID());
+            map.put("quantity", quantity[i]);
+
+            // Create dist_item
+            String doc = dist.getID() + "_" + item[i].getID();
+            DocumentReference ref = getDatabase().collection("Dist_Item").document(doc);
+            ref.set(map);
+
+            // Update quantity in stock
+            item[i].decreaseQuantity(quantity[i]);
+            suc = updateItemQuantity(item[i]);
+
+            if(!suc) // If not successful save
+                return false;
+        }
+
+        return true;
+    }
+
+
+    /**
+     * Creates a kit in the database.
+     * @param id Barcode for kit
+     * @param name Name for kit
+     * @param descr Description for kit
+     * @return Null object if save failed
+     */
+    public Kit createKit(String id, String name, String descr)
+    {
+        HashMap<String, Object> map = new HashMap();
+        map.put("ID", id);
+        map.put("name", name);
+        map.put("description", descr);
+
+        DocumentReference ref = getDatabase().collection("Kit").document(id);
+        Task t = ref.set(map);
+
+        waitForResponse(t);
+
+        return new Kit(id, name, descr);
+    }
+
+
+    /**
+     * Returns the nonsellable items in a given kit.
+     * No items in kit will return an empty array.
+     * @param kit Kit to search
+     * @return Array of items in kit
+     */
+    public NonSellableItem[] getItemsFromKit(Kit kit)
+    {
+        NonSellableItem[] items;
+
+        Task t = getDatabase().collection("Kit_Item").whereEqualTo("kit", kit.getID()).get();
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot snap = (QuerySnapshot) t.getResult();
+            List<DocumentSnapshot> docs = snap.getDocuments();
+            items = new NonSellableItem[docs.size()];
+
+            for(int i = 0; i < items.length; i++)
+            {
+                items[i] = getNonSellableItem(docs.get(i).getString("ID"));
+            }
+        }
+        else
+            items = new NonSellableItem[0];
+
+        return items;
+    }
+
+
+    /**
+     * Returns reference of the item document of ID.
+     * @param id Document ID
+     * @return DocumentReference to document
+     */
+    private DocumentSnapshot getItem(String id)
+    {
+        Task t = getDatabase().collection("Item").whereEqualTo("ID", id).get();
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot snap = (QuerySnapshot) t.getResult();
+            List<DocumentSnapshot> list = snap.getDocuments();
+            return list.get(0);
+        }
+
+        return null;
+    }
+
+
+    /**
+     * Assign the items that belong to a kit.
+     * Using this function will erase all previous nonsellable
+     * items assigned to the kit.
+     * Indices in items and quantities should be parallel.
+     * @param kit Kit to add items to
+     * @param items Array of items to add to kit
+     * @param quantity Array of quantities of each item in var items
+     * @return True on success of save
+     */
+    public boolean createKitItemRelation(Kit kit, NonSellableItem[] items, int[] quantity)
+    {
+        if(items.length != quantity.length) // Must be same lengths
+            return false;
+
+
+        // Delete all relations involving kit
+        boolean suc = deleteKitItemRelation(kit);
+        if(!suc) // If delete failed
+            return false;
+
+        // Create kit/item relation
+        for(int i = 0; i < items.length; i++)
+        {
+            suc = createKitItem(kit, items[i], quantity[i]);
+
+            if(!suc) // if save failed
+                return false;
+        }
+
+
+        return true;
+    }
+
+
+    /**
+     * Creates the kit/item relation in the Kit_Item collection.
+     * Document name is KitID_ItemID.
+     * @param kit Kit to relate
+     * @param item Item to relate
+     * @param quantity Quantity to save
+     * @return True if save successful
+     */
+    private boolean createKitItem(Kit kit, Item item, int quantity)
+    {
+        HashMap<String, Object> map = new HashMap();
+        map.put("item", item.getID());
+        map.put("kit", kit.getID());
+        map.put("quantity", quantity);
+
+        String id = kit.getID() + "_" + item.getID();
+        DocumentReference ref = getDatabase().collection("Kit_Item").document(id);
+        Task t = ref.set(map);
+        waitForResponse(t);
+
+        return t.isSuccessful();
+    }
+
+
+    /**
+     * Deletes records involving given kit ID from database.
+     * @param kit Kit records to delete
+     * @return True if successful
+     */
+    private boolean deleteKitItemRelation(Kit kit)
+    {
+        // Get all records with kit ID in it
+        Task t = getDatabase().collection("Kit").whereEqualTo("kit", kit.getID()).get();
+        waitForResponse(t);
+
+
+        // Erase all previous documents for specified kit
+        if(t.isSuccessful())
+        {
+            QuerySnapshot snap = (QuerySnapshot) t.getResult();
+            List<DocumentSnapshot> docs = snap.getDocuments();
+
+            for(int i = 0; i < docs.size(); i++)
+            {
+                Task t1 = docs.get(i).getReference().delete(); // Delete document
+                waitForResponse(t1); // Could be faster with task monitor?
+
+                if(!t1.isSuccessful())
+                    return false;
+            }
+        }
+        else
+            return false; // Not successful
+
+
+        return true;
     }
 
 
@@ -413,8 +848,10 @@ public final class Database
     {
         while(!t.isComplete())
         {
-            /*try { t.wait(20); } // Max 20ms wait time
-            catch (InterruptedException e) { e.printStackTrace(); }*/
+            /*try { Tasks.await(t, 10, TimeUnit.MILLISECONDS); } // Max 20ms wait time
+            catch (InterruptedException e) { e.printStackTrace(); }
+            catch (TimeoutException e) { e.printStackTrace(); }
+            catch (ExecutionException e) { e.printStackTrace(); }*/
         }
     }
 }
