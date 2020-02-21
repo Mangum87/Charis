@@ -10,6 +10,7 @@ import com.charis.data.NonSellableItem;
 import com.charis.data.SellableItem;
 import com.charis.data.User;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -48,9 +49,25 @@ public final class Database
 
 
     /**
+     * Closes the connection to the database.
+     * @return True if connection closed
+     */
+    public boolean close()
+    {
+        Task t = this.db.terminate();
+        waitForResponse(t);
+        return t.isSuccessful();
+    }
+
+
+    /**
      * Creates a user record with given attributes.
+     * Password is saved in the database using bcrypt algorithm
+     * with random salt.
+     * Password attribute becomes the hashed version in
+     * returned User object.
      * @param uname Username
-     * @param password password
+     * @param password plaintext password
      * @param admin Is user an admin?
      * @param active Is account active?
      * @param fname First name
@@ -59,6 +76,8 @@ public final class Database
      */
     public User createUser(String uname, String password, boolean admin, boolean active, String fname, String lname)
     {
+        password = hashPassword(password); // Encrypt password
+
         HashMap<String, Object> map = new HashMap();
         map.put("password", password);
         map.put("admin", admin);
@@ -69,18 +88,76 @@ public final class Database
         DocumentReference ref = getDatabase().collection("User").document(uname.toLowerCase());
         ref.set(map);
 
+        // Leave password blank in object
         return new User(uname, fname, lname, password, admin, active);
     }
 
 
     /**
-     * Updates a user record with all values in u.
+     * Hashes the plaintext password with a random
+     * salt using BCrypt.
+     * @param pass Plaintext password
+     * @return Hashed version of password
+     */
+    private String hashPassword(String pass)
+    {
+        String salt = BCrypt.gensalt(10);
+        String hashed = BCrypt.hashpw(pass, salt);
+        return hashed;
+    }
+
+
+    /**
+     * Checks plaintext password against the hashed version
+     * from the database to see if they match.
+     * @param plain Plaintext password
+     * @param hashed Hashed password with salt
+     * @return True if plaintext becomes the hashed version
+     * when run through the hashing algorithm
+     */
+    public boolean checkHashedPassword(String plain, String hashed)
+    {
+        return BCrypt.checkpw(plain, hashed);
+    }
+
+
+    /**
+     * Updates a user record with all values in u
+     * except for password. Use function updatePassword()
+     * to update the password.
      * @param u User object to update
      */
-    public void updateUser(User u)
+    public boolean updateUser(User u)
     {
         // Overwrite existing document
-        createUser(u.getUsername(), u.getPassword(), u.isAdmin(), u.isActive(), u.getFirstName(), u.getLastName());
+        DocumentReference ref = getDatabase().collection("User").document(u.getUsername());
+        Task t1 = ref.update("firstName", u.getFirstName());
+        Task t2 = ref.update("lastName", u.getLastName());
+        Task t3 = ref.update("active", u.isActive());
+        Task t4 = ref.update("admin", u.isAdmin());
+
+        Task t5 = Tasks.whenAll(t1, t2, t3, t4); // Combine to single task
+        waitForResponse(t5);
+        return t5.isSuccessful();
+    }
+
+
+    /**
+     * Updates the plaintext password saved in u,
+     * encrypts it, and saves the hashed password
+     * to the database.
+     * @param u Object with plaintext password
+     * @return True if successful
+     */
+    public boolean updatePassword(User u)
+    {
+        if(u == null)
+            return false;
+
+        DocumentReference ref = getDatabase().collection("User").document(u.getUsername());
+        Task t = ref.update("password", hashPassword(u.getPassword()));
+        waitForResponse(t);
+        return t.isSuccessful();
     }
 
 
