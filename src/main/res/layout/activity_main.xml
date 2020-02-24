@@ -21,86 +21,88 @@
 
     <Button
         android:id="@+id/button"
-        android:layout_width="101dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="74dp"
-        android:layout_marginTop="120dp"
-        android:layout_marginBottom="60dp"
-        android:text="Inventory"
+        android:layout_width="115dp"
+        android:layout_height="49dp"
         android:onClick="openInventory"
-        app:layout_constraintBottom_toTopOf="@+id/button3"
+        android:text="Inventory"
+        app:layout_constraintBottom_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.25"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+        app:layout_constraintTop_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.648" />
 
     <Button
         android:id="@+id/button2"
         android:layout_width="88dp"
         android:layout_height="48dp"
-        android:layout_marginTop="120dp"
-        android:layout_marginEnd="74dp"
-        android:layout_marginBottom="60dp"
         android:text="Add"
-        app:layout_constraintBottom_toTopOf="@+id/button4"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.767"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.329" />
 
     <Button
         android:id="@+id/button3"
         android:layout_width="88dp"
         android:layout_height="48dp"
-        android:layout_marginStart="80dp"
-        android:layout_marginTop="56dp"
-        android:layout_marginBottom="56dp"
         android:text="Sell"
-        app:layout_constraintBottom_toTopOf="@+id/button5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.272"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.48" />
 
     <Button
         android:id="@+id/button4"
         android:layout_width="88dp"
         android:layout_height="48dp"
-        android:layout_marginTop="56dp"
-        android:layout_marginEnd="72dp"
-        android:layout_marginBottom="56dp"
         android:text="Kit"
-        app:layout_constraintBottom_toTopOf="@+id/button6"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button2" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.767"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.48" />
 
     <Button
         android:id="@+id/button5"
         android:layout_width="88dp"
         android:layout_height="48dp"
-        android:layout_marginStart="80dp"
-        android:layout_marginTop="53dp"
-        android:layout_marginBottom="261dp"
         android:text="Report"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button3" />
+        app:layout_constraintHorizontal_bias="0.272"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.635" />
 
     <Button
         android:id="@+id/button6"
-        android:layout_width="117dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="72dp"
-        android:layout_marginTop="53dp"
-        android:layout_marginBottom="261dp"
+        android:layout_width="126dp"
+        android:layout_height="47dp"
         android:text="Distribution"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/button5"
-        app:layout_constraintTop_toBottomOf="@+id/button4" />
+        app:layout_constraintHorizontal_bias="0.807"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.635" />
 
     <Button
         android:id="@+id/button7"
         android:layout_width="89dp"
         android:layout_height="36dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="4dp"
-        android:text="EXIT"
         android:onClick="logout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:text="EXIT"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.984"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.008" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
