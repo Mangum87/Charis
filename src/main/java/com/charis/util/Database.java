@@ -19,14 +19,24 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 public final class Database
 {
+    /**
+     * Firestore access object
+     */
     final private FirebaseFirestore db;
+
+    /**
+     * The length of barcode IDs.
+     */
+    final static public int BARCODE_SIZE = 13;
 
 
     /**
@@ -79,7 +89,7 @@ public final class Database
         password = hashPassword(password); // Encrypt password
 
         HashMap<String, Object> map = new HashMap();
-        map.put("password", password);
+        map.put("password", hashPassword(password));
         map.put("admin", admin);
         map.put("active", active);
         map.put("firstName", fname);
@@ -101,7 +111,7 @@ public final class Database
      */
     private String hashPassword(String pass)
     {
-        String salt = BCrypt.gensalt(10);
+        String salt = BCrypt.gensalt(5);
         String hashed = BCrypt.hashpw(pass, salt);
         return hashed;
     }
@@ -316,8 +326,7 @@ public final class Database
 
         if(t.isSuccessful())
         {
-            QuerySnapshot snap = (QuerySnapshot) t.getResult();
-            DocumentSnapshot doc = snap.getDocuments().get(0);
+            DocumentSnapshot doc = (DocumentSnapshot) t.getResult();
 
             return new Location(id, doc.getString("name"));
         }
@@ -388,11 +397,10 @@ public final class Database
 
         if(t.isSuccessful())
         {
-            QuerySnapshot snap = (QuerySnapshot) t.getResult();
-            List<DocumentSnapshot> doc = snap.getDocuments();
+            DocumentSnapshot doc = (DocumentSnapshot) t.getResult();
 
-            String name = doc.get(0).getString("name");
-            return new Category(doc.get(0).getId(), name);
+            String name = doc.getString("name");
+            return new Category(id, name);
         }
         else
             return null;
@@ -458,13 +466,19 @@ public final class Database
 
     /**
      * Creates a sellable item in the database.
-     * @param id ID of item
+     * ID of the item is generated.
+     * @param rec Date received
+     * @param desc Additional description
+     * @param cond Condition of item
+     * @param price Price of item
+     * @param cat Category of item
      * @param quantity Quantity in stock
      * @param loc Location of item
      * @return True if successful
      */
-    public boolean createSellableItem(String id, Date rec, String desc, Condition cond, double price, Category cat, int quantity, Location loc)
+    public boolean createSellableItem(Date rec, String desc, Condition cond, double price, Category cat, int quantity, Location loc)
     {
+        String id = makeID(); // Generate an ID
         boolean suc = createItem(id, rec, desc, cond, price, cat); // Make document in Item collection
         if(!suc)
             return false;
@@ -484,14 +498,20 @@ public final class Database
 
     /**
      * Creates a nonsellable item in the database.
-     * @param id ID of item
+     * ID is generated for item.
+     * @param rec Date received
+     * @param desc Additional description
+     * @param cond Condition of item
+     * @param price Price of item
+     * @param cat Category of item
      * @param source Source person/business of item
      * @param quantity Quantity of item
      * @param loc Location of item
      * @return True if successful
      */
-    public boolean createNonSellableItem(String id, Date rec, String desc, Condition cond, double price, Category cat, String source, int quantity, Location loc)
+    public boolean createNonSellableItem(Date rec, String desc, Condition cond, double price, Category cat, String source, int quantity, Location loc)
     {
+        String id = makeID(); // Generate an ID
         boolean suc = createItem(id, rec, desc, cond, price, cat); // Make document in Item collection
         if(!suc)
             return false;
@@ -500,7 +520,7 @@ public final class Database
         HashMap<String, Object> map = new HashMap();
         map.put("source", source);
         map.put("quantity", quantity);
-        map.put("location", loc);
+        map.put("location", loc.getID());
 
         DocumentReference ref = getDatabase().collection("NonSellable").document(id);
         Task t = ref.set(map);
@@ -527,7 +547,7 @@ public final class Database
         Date received = itemSnap.getDate("received");
         String desc = itemSnap.getString("description");
         Condition cond = Condition.toCondition(itemSnap.getLong("condition"));
-        double amount = itemSnap.getDouble("amount");
+        double amount = 0.0; //itemSnap.getDouble("price");
         Category cat = getCategory(itemSnap.getString("category"));
 
 
@@ -539,17 +559,18 @@ public final class Database
 
         if(t.isSuccessful())
         {
-            QuerySnapshot snap = (QuerySnapshot) t.getResult();
-            DocumentSnapshot docs = snap.getDocuments().get(0); // Should only return one result
+            DocumentSnapshot docs = (DocumentSnapshot) t.getResult();
+            if(docs.exists())
+            {
+                String source = docs.getString("source");
+                int quantity = Integer.valueOf(String.valueOf(docs.getLong("quantity")));
+                Location loc = getLocation(docs.getString("location"));
 
-            String source = docs.getString("source");
-            int quantity = Integer.valueOf(String.valueOf(docs.getLong("quantity")));
-            Location loc = getLocation(docs.getString("location"));
-
-            return new NonSellableItem(id, received, desc, quantity, cond, amount, cat, source, loc);
+                return new NonSellableItem(id, received, desc, quantity, cond, amount, cat, source, loc);
+            }
         }
-        else
-            return null;
+
+        return null;
     }
 
 
@@ -570,7 +591,7 @@ public final class Database
         Date received = itemSnap.getDate("received");
         String desc = itemSnap.getString("description");
         Condition cond = Condition.toCondition(itemSnap.getLong("condition"));
-        double amount = itemSnap.getDouble("amount");
+        double amount = itemSnap.getDouble("price");
         Category cat = getCategory(itemSnap.getString("category"));
 
 
@@ -582,16 +603,36 @@ public final class Database
 
         if(t.isSuccessful())
         {
-            QuerySnapshot snap = (QuerySnapshot) t.getResult();
-            DocumentSnapshot docs = snap.getDocuments().get(0); // Should only return one result
+            DocumentSnapshot docs = (DocumentSnapshot) t.getResult();
+            if(docs.exists())
+            {
+                int quantity = Integer.valueOf(String.valueOf(docs.getLong("quantity")));
+                Location loc = getLocation(docs.getString("location"));
 
-            int quantity = Integer.valueOf(String.valueOf(docs.getLong("quantity")));
-            Location loc = getLocation(docs.getString("location"));
-
-            return new SellableItem(id, received, desc, quantity, cond, amount, cat, loc);
+                return new SellableItem(id, received, desc, quantity, cond, amount, cat, loc);
+            }
         }
-        else
-            return null;
+
+        return null;
+    }
+
+
+    /**
+     * Generate a random ID of length
+     * BARCODE_SIZE consisting of integers.
+     * @return
+     */
+    private String makeID()
+    {
+        Random rand = new Random();
+        int[] id = new int[BARCODE_SIZE];
+
+        for(int i = 0; i < BARCODE_SIZE; i++)
+        {
+            id[i] = rand.nextInt(10); // [0, 10)
+        }
+
+        return Arrays.toString(id).replaceAll("\\[|\\]|,|\\s", "");
     }
 
 
@@ -717,16 +758,18 @@ public final class Database
      * Create a distribution of sellable items in the database.
      * item and quantity are arrays of items and the number of each item sold
      * and should be ordered with matching indices.
-     * @param item Array of items in distribution
-     * @param quantity Array of quantities of each item sold
+     * @param sell Array of items in distribution
+     * @param sellQuant Array of quantities of each item sold
+     * @param nonSell Array of items in distribution
+     * @param nonSellQuant Array of quantities of each item sold
      * @param amount Total + tax of sale
      * @param date Date of sale
      * @param user User who performed sale
      * @return True if successful
      */
-    public boolean createDistItemRelation(SellableItem[] item, int[] quantity, double amount, Date date, User user)
+    public boolean createDistItemRelation(SellableItem[] sell, int[] sellQuant, NonSellableItem[] nonSell, int[] nonSellQuant, double amount, Date date, User user)
     {
-        if(item.length != quantity.length) // Stop if arrays are different lengths
+        if((sell.length != sellQuant.length) || (nonSell.length != nonSellQuant.length)) // Stop if arrays are different lengths
             return false;
 
 
@@ -735,23 +778,22 @@ public final class Database
             return false;
 
         boolean suc;
-        for(int i = 0; i < item.length; i++)
+
+        // Save NonSellables
+        for(int i = 0; i < nonSell.length; i++)
         {
-            HashMap<String, Object> map = new HashMap();
-            map.put("item", item[i].getID());
-            map.put("dist", dist.getID());
-            map.put("quantity", quantity[i]);
+            suc = saveDistItem(nonSell, nonSellQuant, dist.getID());
 
-            // Create dist_item
-            String doc = dist.getID() + "_" + item[i].getID();
-            DocumentReference ref = getDatabase().collection("Dist_Item").document(doc);
-            ref.set(map);
+            if(!suc)
+                return false;
+        }
 
-            // Update quantity in stock
-            item[i].decreaseQuantity(quantity[i]);
-            suc = updateItemQuantity(item[i]);
+        // Save Sellables
+        for(int i = 0; i < sell.length; i++)
+        {
+            suc = saveDistItem(sell, sellQuant, dist.getID());
 
-            if(!suc) // If not successful save
+            if(!suc)
                 return false;
         }
 
@@ -760,49 +802,41 @@ public final class Database
 
 
     /**
-     * Create a distribution of nonsellable items in the database.
-     * item and quantity are arrays of items and the number of each item sold
-     * and should be ordered with matching indices.
-     * @param item Array of items in distribution
-     * @param quantity Array of quantities of each item sold
-     * @param amount Total + tax of sale
-     * @param date Date of sale
-     * @param user User who performed sale
-     * @return True if successful
+     * Saves Sellable and NonSellable items to the database.
+     * @param item Array of items
+     * @param quantity Array of quantities
+     * @param id ID of the distribution
+     * @return True if all saves are successful
      */
-    public boolean createDistItemRelation(NonSellableItem[] item, int[] quantity, double amount, Date date, User user)
+    private boolean saveDistItem(Item[] item, int[] quantity, String id)
     {
-        if(item.length != quantity.length) // Stop if arrays are different lengths
-            return false;
-
-
-        Distribution dist = createDistribution(amount, date, user); // Make distribution
-        if(dist == null)
-            return false;
-
-        boolean suc;
+        boolean suc = false;
+        HashMap<String, Object> map;
         for(int i = 0; i < item.length; i++)
         {
-            HashMap<String, Object> map = new HashMap();
+            map = new HashMap();
             map.put("item", item[i].getID());
-            map.put("dist", dist.getID());
+            map.put("dist", id);
             map.put("quantity", quantity[i]);
 
             // Create dist_item
-            String doc = dist.getID() + "_" + item[i].getID();
-            DocumentReference ref = getDatabase().collection("Dist_Item").document(doc);
+            DocumentReference ref = getDatabase().collection("Dist_Item").document();
             ref.set(map);
 
-            // Update quantity in stock
             item[i].decreaseQuantity(quantity[i]);
-            suc = updateItemQuantity(item[i]);
+
+            if(item[i] instanceof NonSellableItem)
+                suc = updateItemQuantity((NonSellableItem) item[i]);
+            else
+                suc = updateItemQuantity((SellableItem) item[i]);
 
             if(!suc) // If not successful save
                 return false;
         }
 
-        return true;
+        return suc;
     }
+
 
 
     /**
@@ -874,7 +908,8 @@ public final class Database
         {
             QuerySnapshot snap = (QuerySnapshot) t.getResult();
             List<DocumentSnapshot> list = snap.getDocuments();
-            return list.get(0);
+            if(list.size() > 0)
+                return list.get(0);
         }
 
         return null;
