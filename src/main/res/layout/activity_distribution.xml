@@ -13,7 +13,7 @@
         android:inputType="textPersonName"
         android:layout_marginRight="45dp"
         android:layout_marginLeft="15dp"
-        android:layout_marginTop="18dp"
+        android:layout_marginTop="50dp"
         tools:text="Barcode" />
 
     <Button
@@ -22,18 +22,19 @@
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/txtBarcode"
         android:layout_marginRight="10dp"
-        android:layout_marginTop="18dp"
+        android:layout_marginTop="50dp"
         android:text="Checkout"
         android:onClick="checkoutItems"/>
 
     <Button
         android:id="@+id/btnClose"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="88dp"
+        android:layout_height="36dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
         android:layout_toRightOf="@+id/btnFinish"
-        android:layout_marginTop="18dp"
-        android:text="Close"
-        android:onClick="closeForm"/>
+        android:onClick="closeForm"
+        android:text="Close" />
 
 
     <ScrollView
@@ -88,7 +89,7 @@
         android:id="@+id/txtSubTotal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="$0"
+        android:text="$0.00"
         android:textColor="#000"
         android:textSize="18dp"
         android:layout_marginLeft="10dp"
@@ -111,7 +112,7 @@
         android:id="@+id/txtTax"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="$0"
+        android:text="$0.00"
         android:textColor="#000"
         android:textSize="18dp"
         android:layout_marginLeft="10dp"
@@ -134,12 +135,22 @@
         android:id="@+id/txtTotal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="$0"
+        android:text="$0.00"
         android:textSize="18dp"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="80dp"
         android:layout_marginLeft="10dp"
         android:layout_toRightOf="@+id/textView8"
         android:textColor="#000" />
+
+    <Button
+        android:id="@+id/btnDelete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="50dp"
+        android:layout_toRightOf="@+id/btnFinish"
+        android:onClick="deleteItem" />
 
 </RelativeLayout>
