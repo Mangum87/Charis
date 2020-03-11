@@ -431,10 +431,11 @@ public class Distribution extends AppCompatActivity
 
         boolean suc = this.db.createDistItemRelation(i1, c1, i2, c2, total, new Date(), this.user);
 
-        // Reset fraome components
+        // Reset frame components
         if(suc)
         {
-            this.layout.removeAllViews();
+            this.layout.removeAllViews(); // Reset table to empty
+            this.list = new ArrayList<Item>(20); // New list
             ((TextView)findViewById(R.id.txtBarcode)).requestFocus();
             ((TextView)findViewById(R.id.txtTax)).setText("$0.00");
             ((TextView)findViewById(R.id.txtTotal)).setText("$0.00");
