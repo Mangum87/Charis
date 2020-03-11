@@ -34,6 +34,8 @@ public class Distribution extends AppCompatActivity
     private ArrayList<Item> list; // Holds list of items in table
     private TableLayout layout;
     private TextWatcher watcher; // For EditText quantity
+    private View.OnClickListener listener; // Listener for table rows
+    private int viewIndex;  // Index of currently selected row
     private User user;
 
     /**
@@ -50,7 +52,8 @@ public class Distribution extends AppCompatActivity
         this.db = new Database(); // Get instance of database
         this.user = (User)getIntent().getSerializableExtra("user");
         this.layout = (TableLayout)findViewById(R.id.tablelayout);
-        list = new ArrayList<Item>(20);
+        this.viewIndex = -1;
+        this.list = new ArrayList<Item>(20);
         setHeader(); // Create the table header
         makeListeners(); // Create component listeners
     }
@@ -76,6 +79,15 @@ public class Distribution extends AppCompatActivity
             public void afterTextChanged(Editable s) {}
         };
 
+        this.listener = new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                handleRowClick(v);
+            }
+        };
+
         ((TextView)findViewById(R.id.txtBarcode)).addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -92,6 +104,31 @@ public class Distribution extends AppCompatActivity
             @Override
             public void afterTextChanged(Editable s) {}
         });
+    }
+
+
+    private void handleRowClick(View v)
+    {
+        this.viewIndex = findViewIndex(v); // Get index of clicked row
+        colorRows();
+    }
+
+
+    /**
+     * Colors the selected row in the table.
+     */
+    private void colorRows()
+    {
+        TableRow row;
+
+        for(int i = 0; i < layout.getChildCount(); i++)
+        {
+            row = (TableRow)this.layout.getChildAt(i);
+            if (i == this.viewIndex)
+                row.setBackgroundColor(Color.LTGRAY);
+            else
+                row.setBackgroundColor(Color.parseColor("#EEEEEE"));
+        }
     }
 
 
@@ -134,6 +171,8 @@ public class Distribution extends AppCompatActivity
         }
 
 
+        updatePrice(); // Update totals
+
         // Reset TextView
         ((TextView)findViewById(R.id.txtBarcode)).setText("");
         findViewById(R.id.txtBarcode).requestFocus();
@@ -168,6 +207,7 @@ public class Distribution extends AppCompatActivity
                         break;
                 }
 
+                updatePrice();
                 dialog.dismiss();
             }
         });
@@ -230,6 +270,7 @@ public class Distribution extends AppCompatActivity
         row.setClickable(true);
         TableRow.LayoutParams p = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT);
         row.setLayoutParams(p);
+        row.setOnClickListener(this.listener);
 
         // Set header columns
         TextView h1 = new TextView(this);
@@ -380,8 +421,25 @@ public class Distribution extends AppCompatActivity
             }
         }
 
-        double total = Double.valueOf(((TextView)findViewById(R.id.txtTotal)).getText().toString());
-        this.db.createDistItemRelation((SellableItem[]) sellItem.toArray(), toArray((Integer[])sellCount.toArray()), (NonSellableItem[]) nonsellItem.toArray(), toArray((Integer[])nonsellCount.toArray()), total, new Date(), this.user);
+        // Set up from table to send to database
+        String strTotal = ((TextView)findViewById(R.id.txtTotal)).getText().toString().substring(1); // Skip over $
+        double total = Double.valueOf(strTotal);
+        SellableItem[] i1 = toArrayS(sellItem.toArray());
+        int[] c1 = toArrayI(sellCount.toArray());
+        NonSellableItem[] i2 = toArrayNS(nonsellItem.toArray());
+        int[] c2 = toArrayI(nonsellCount.toArray());
+
+        boolean suc = this.db.createDistItemRelation(i1, c1, i2, c2, total, new Date(), this.user);
+
+        // Reset fraome components
+        if(suc)
+        {
+            this.layout.removeAllViews();
+            ((TextView)findViewById(R.id.txtBarcode)).requestFocus();
+            ((TextView)findViewById(R.id.txtTax)).setText("$0.00");
+            ((TextView)findViewById(R.id.txtTotal)).setText("$0.00");
+            ((TextView)findViewById(R.id.txtSubTotal)).setText("$0.00");
+        }
     }
 
 
@@ -391,17 +449,89 @@ public class Distribution extends AppCompatActivity
      * @param arr Array to convert
      * @return int array
      */
-    private int[] toArray(Integer[] arr)
+    private int[] toArrayI(Object[] arr)
     {
         int[] array = new int[arr.length];
 
         if(arr.length > 0)
         {
             for(int i = 0; i < arr.length; i++)
-            { array[i] = arr[i]; }
+            {
+                array[i] = ((Integer)arr[i]).intValue();
+            }
         }
 
         return array;
+    }
+
+
+    /**
+     * Convert the given object array
+     * to a SellableItem array.
+     * @param o Array to convert
+     * @return Array of SellableItems
+     */
+    private SellableItem[] toArrayS(Object[] o)
+    {
+        SellableItem[] item = new SellableItem[o.length];
+
+        for(int i = 0; i < item.length; i++)
+        {
+            item[i] = (SellableItem)o[i];
+        }
+
+        return item;
+    }
+
+
+    /**
+     * Convert the given object array
+     * to a NonSellableItem array.
+     * @param o Array to convert
+     * @return Array to NonSellableItems
+     */
+    private NonSellableItem[] toArrayNS(Object[] o)
+    {
+        NonSellableItem[] item = new NonSellableItem[o.length];
+
+        for(int i = 0; i < item.length; i++)
+        {
+            item[i] = (NonSellableItem)o[i];
+        }
+
+        return item;
+    }
+
+
+    /**
+     * Delete the selected item from the table.
+     * @param v Row to delete
+     */
+    public void deleteItem(View v)
+    {
+        if(this.viewIndex > -1)
+        {
+            layout.removeView(v);
+            list.remove(this.viewIndex);
+        }
+    }
+
+
+    /**
+     * Search the table to find the index
+     * of the given View.
+     * @param v View to find
+     * @return Index of view or -1 if not found
+     */
+    private int findViewIndex(View v)
+    {
+        for(int i = 0; i < list.size(); i++)
+        {
+            if(layout.getChildAt(i) == v)
+                return i;
+        }
+
+        return -1;
     }
 
 
