@@ -15,15 +15,11 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import com.charis.data.Category;
-import com.charis.data.Enum.Condition;
 import com.charis.data.Item;
-import com.charis.data.Location;
 import com.charis.data.NonSellableItem;
 import com.charis.data.SellableItem;
 import com.charis.data.User;
 import com.charis.util.Database;
-import com.google.firebase.firestore.DocumentReference;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -406,8 +402,8 @@ public class Distribution extends AppCompatActivity
             TextView colQuantity = (TextView)row.getChildAt(2);
 
             // Translate to vars
-            double price = Double.valueOf(colPrice.getText().toString());
-            int quantity = Integer.valueOf(colQuantity.getText().toString());
+            double price = Double.parseDouble(colPrice.getText().toString());
+            int quantity = Integer.parseInt(colQuantity.getText().toString());
 
             if(price == 0.0) // 0.0 = NonSellableItem
             {

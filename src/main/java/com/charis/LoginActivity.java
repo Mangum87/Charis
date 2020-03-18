@@ -17,7 +17,6 @@ import com.charis.data.User;
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener
 {
     private EditText name , password;
-    private Button submit;
     private Database access;
 
     @Override
@@ -29,7 +28,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         // Linking buttons
         name = (EditText) findViewById(R.id.username);
         password = (EditText) findViewById(R.id.password);
-        submit =  (Button) findViewById(R.id.submit);
+        Button submit =  (Button) findViewById(R.id.submit);
 
         submit.setOnClickListener(this);
 

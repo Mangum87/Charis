@@ -15,8 +15,8 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
-public class Inventory extends AppCompatActivity {
-
+public class Inventory extends AppCompatActivity
+{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,11 +44,7 @@ public class Inventory extends AppCompatActivity {
                 }
             }
 
-
-            if(map != null)
-                ((ImageView)findViewById(R.id.imageView)).setImageBitmap(map);
-            else
-                Toast.makeText(getApplicationContext(), "Error loading QR code", Toast.LENGTH_SHORT).show();
+            ((ImageView)findViewById(R.id.imageView)).setImageBitmap(map);
         }
         catch (WriterException e) { e.printStackTrace(); }
     }
