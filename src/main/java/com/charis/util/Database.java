@@ -563,7 +563,7 @@ public final class Database
             if(docs.exists())
             {
                 String source = docs.getString("source");
-                int quantity = Integer.valueOf(String.valueOf(docs.getLong("quantity")));
+                int quantity = Integer.parseInt(String.valueOf(docs.getLong("quantity")));
                 Location loc = getLocation(docs.getString("location"));
 
                 return new NonSellableItem(id, received, desc, quantity, cond, amount, cat, source, loc);
@@ -606,7 +606,7 @@ public final class Database
             DocumentSnapshot docs = (DocumentSnapshot) t.getResult();
             if(docs.exists())
             {
-                int quantity = Integer.valueOf(String.valueOf(docs.getLong("quantity")));
+                int quantity = Integer.parseInt(String.valueOf(docs.getLong("quantity")));
                 Location loc = getLocation(docs.getString("location"));
 
                 return new SellableItem(id, received, desc, quantity, cond, amount, cat, loc);
@@ -620,7 +620,7 @@ public final class Database
     /**
      * Generate a random ID of length
      * BARCODE_SIZE consisting of integers.
-     * @return
+     * @return Random ID
      */
     private String makeID()
     {
@@ -777,12 +777,10 @@ public final class Database
         if(dist == null)
             return false;
 
-        boolean suc;
-
         // Save NonSellables
         for(int i = 0; i < nonSell.length; i++)
         {
-            suc = saveDistItem(nonSell, nonSellQuant, dist.getID());
+            boolean suc = saveDistItem(nonSell, nonSellQuant, dist.getID());
 
             if(!suc)
                 return false;
@@ -791,7 +789,7 @@ public final class Database
         // Save Sellables
         for(int i = 0; i < sell.length; i++)
         {
-            suc = saveDistItem(sell, sellQuant, dist.getID());
+            boolean suc = saveDistItem(sell, sellQuant, dist.getID());
 
             if(!suc)
                 return false;
@@ -1016,6 +1014,7 @@ public final class Database
      */
     private void waitForResponse(Task t)
     {
+        // Spin lock for now
         while(!t.isComplete())
         {
             /*try { Tasks.await(t, 10, TimeUnit.MILLISECONDS); } // Max 20ms wait time
