@@ -1,10 +1,10 @@
 package com.charis.data;
-
+import java.io.Serializable;
 
 /**
  * Encapsulates the properties of a user.
  */
-public final class User
+public final class User implements Serializable
 {
     private final String username;
     private final String firstName;

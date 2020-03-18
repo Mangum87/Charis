@@ -1,5 +1,10 @@
 package com.charis.data;
 
+
+/**
+ * Encapsulates properties of categories used
+ * to categorize items.
+ */
 public final class Category
 {
     private final String ID;

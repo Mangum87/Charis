@@ -80,9 +80,23 @@ public abstract class Item
      * Can be negative if reported by DB.
      * @param quantity Quantity in database
      */
-    public void setQuantity(int quantity)
+    private void setQuantity(int quantity)
     {
         this.quantity = quantity;
+    }
+
+
+    /**
+     * Decreases the quantity stored by the quantity passed.
+     * Quantity passed must be greater than zero.
+     * @param quantity Amount to decrease by
+     */
+    public void decreaseQuantity(int quantity)
+    {
+        if(quantity < 1)
+            return;
+
+        this.quantity -= quantity;
     }
 
 

@@ -1,5 +1,10 @@
 package com.charis.data;
 
+
+/**
+ * Encapsulates properties of locations items
+ * can be stored at.
+ */
 public final class Location
 {
     private final String ID;

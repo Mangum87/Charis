@@ -3,6 +3,10 @@ package com.charis.data;
 import com.charis.data.Enum.Condition;
 import java.util.Date;
 
+
+/**
+ * Encapsulates properties of nonsellable items.
+ */
 public final class NonSellableItem extends Item
 {
     private String source;

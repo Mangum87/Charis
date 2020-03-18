@@ -3,6 +3,10 @@ package com.charis.data;
 import com.charis.data.Enum.Condition;
 import java.util.Date;
 
+
+/**
+ * Encapsulates properties of sellable items.
+ */
 public final class SellableItem extends Item
 {
     /**
