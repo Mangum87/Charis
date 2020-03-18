@@ -32,7 +32,7 @@ public enum Condition
     public static Condition toCondition(long c)
     {
         String s = String.valueOf(c); // Convert to string
-        return toCondition(Integer.valueOf(s)); // Convert to int
+        return toCondition(Integer.parseInt(s)); // Convert to int
     }
 
 
