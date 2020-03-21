@@ -24,6 +24,7 @@
         android:layout_width="88dp"
         android:layout_height="48dp"
         android:text="Add"
+        android:onClick="openNewItem"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.767"
         app:layout_constraintLeft_toLeftOf="parent"
