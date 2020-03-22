@@ -58,13 +58,4 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra("user", user); // Pass user object
         startActivity(intent);
     }
-    
-    /**
-     * open new item screen for creating and editing items
-     */
-    public void openNewItem(View view)
-    {
-        Intent intent = new Intent(this, NewItem.class);
-        startActivity(intent);
-    }
 }
