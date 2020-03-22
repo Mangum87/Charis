@@ -23,8 +23,7 @@
         android:id="@+id/button2"
         android:layout_width="88dp"
         android:layout_height="48dp"
-        android:text="Add"
-        android:onClick="openNewItem"
+        android:text="Users"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.767"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -57,19 +56,6 @@
         app:layout_constraintVertical_bias="0.635" />
 
     <Button
-        android:id="@+id/button6"
-        android:layout_width="126dp"
-        android:layout_height="47dp"
-        android:text="Distribution"
-        android:onClick="openDistribution"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.807"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.635" />
-
-    <Button
         android:id="@+id/button7"
         android:layout_width="89dp"
         android:layout_height="36dp"
@@ -82,30 +68,30 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.008" />
 
-    <ImageButton
-        android:id="@+id/imageButton2"
-        android:layout_width="122dp"
-        android:layout_height="101dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.231"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.484"
-        app:srcCompat="@drawable/shopping_cart"
-        android:onClick="openDistribution" />
-
-    <ImageButton
-        android:id="@+id/imageButton3"
-        android:layout_width="122dp"
-        android:layout_height="101dp"
+    <Button
+        android:id="@+id/btnInventory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Inventory"
+        android:onClick="openNewItem"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.231"
+        app:layout_constraintHorizontal_bias="0.263"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.293"
-        app:srcCompat="@drawable/shelf"
-        android:onClick="openInventory" />
+        app:layout_constraintVertical_bias="0.329" />
+
+    <Button
+        android:id="@+id/btnSell"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sell"
+        android:onClick="openDistribution"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.272"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.48" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
