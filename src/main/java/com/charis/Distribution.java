@@ -275,7 +275,12 @@ public class Distribution extends AppCompatActivity
 
         TextView h2 = new TextView(this);
         double discount = 1 - getDiscount(item);
-        textViewParams(h2, String.format("%.2f", (discount * item.getPrice())));
+        double price = item.getPrice();
+
+        if(item instanceof NonSellableItem) // Adjust price for sale items
+            price = 0.0;
+
+        textViewParams(h2, String.format("%.2f", (discount * price)));
         row.addView(h2);
 
         EditText h3 = new EditText(this);
