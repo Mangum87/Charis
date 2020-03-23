@@ -354,6 +354,39 @@ public final class Database
 
 
     /**
+     * Returns an array of all locations in the database.
+     * Will never return null. If no locations are found,
+     * it returns an array of zero length.
+     * @return Array of locations
+     */
+    public Location[] getAllLocations()
+    {
+        Location[] locs;
+        Task t = getDatabase().collection("Location").get();
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot snap = (QuerySnapshot) t.getResult();
+            List<DocumentSnapshot> docs = snap.getDocuments();
+            locs = new Location[docs.size()];
+
+            for(int i = 0; i < locs.length; i++)
+            {
+                String id = docs.get(i).getId();
+                String name = docs.get(i).getString("name");
+
+                locs[i] = new Location(id, name);
+            }
+        }
+        else
+            locs = new Location[0];
+
+        return locs;
+    }
+
+
+    /**
      * Creates a category record in the database.
      * @param name Name of category
      * @return Category object with given data
@@ -547,7 +580,7 @@ public final class Database
         Date received = itemSnap.getDate("received");
         String desc = itemSnap.getString("description");
         Condition cond = Condition.toCondition(itemSnap.getLong("condition"));
-        double amount = 0.0; //itemSnap.getDouble("price");
+        double amount = itemSnap.getDouble("price");
         Category cat = getCategory(itemSnap.getString("category"));
 
 
@@ -709,14 +742,14 @@ public final class Database
      * @param item Item to update
      * @return True if successful
      */
-    public boolean updateSellable(Item item)
+    public boolean updateSellable(SellableItem item)
     {
         if(item == null)
             return false;
 
         DocumentReference ref = getDatabase().collection("Sellable").document(item.getID());
         Task t1 = ref.update("quantity", item.getQuantity());
-        Task t2 = ref.update("location", item.getLocation());
+        Task t2 = ref.update("location", item.getLocation().getID());
 
         waitForResponse(t1);
         waitForResponse(t2);
@@ -741,7 +774,7 @@ public final class Database
         DocumentReference ref = getDatabase().collection("NonSellable").document(item.getID());
         Task t1 = ref.update("source", ((NonSellableItem)item).getSource());
         Task t2 = ref.update("quantity", item.getQuantity());
-        Task t3 = ref.update("location", item.getLocation());
+        Task t3 = ref.update("location", item.getLocation().getID());
 
         waitForResponse(t1);
         waitForResponse(t2);
