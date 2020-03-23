@@ -274,7 +274,13 @@ public class Distribution extends AppCompatActivity
         row.addView(h1);
 
         TextView h2 = new TextView(this);
-        textViewParams(h2, String.format("%.2f", item.getPrice()));
+        double discount = 1 - getDiscount(item);
+        double price = item.getPrice();
+
+        if(item instanceof NonSellableItem) // Adjust price for sale items
+            price = 0.0;
+
+        textViewParams(h2, String.format("%.2f", (discount * price)));
         row.addView(h2);
 
         EditText h3 = new EditText(this);
@@ -284,6 +290,31 @@ public class Distribution extends AppCompatActivity
 
         layout.addView(row); // Add to table
         this.list.add(item); // Add to list of items in table
+    }
+
+
+    /**
+     * Returns a discount based on time item
+     * was received.  > 60 days gets 30% discount,
+     * > 30 days gets 15% discount.
+     * @param item Item to check
+     * @return 0.30, 0.15, or 0.0 based on time
+     */
+    private double getDiscount(Item item)
+    {
+        Date current = new Date(); // Current date
+        Date rec = item.getReceived(); // Received date
+
+        long days = current.getTime() - rec.getTime(); // Get difference
+        days /= 1000; // ms -> sec
+        days /= 86400; // sec -> day
+
+        if(days > 60)
+            return 0.3;
+        else if(days > 30)
+            return 0.15;
+        else
+            return 0.0;
     }
 
 
@@ -432,7 +463,7 @@ public class Distribution extends AppCompatActivity
         {
             this.layout.removeAllViews(); // Reset table to empty
             this.list = new ArrayList<Item>(20); // New list
-            ((TextView)findViewById(R.id.txtBarcode)).requestFocus();
+            findViewById(R.id.txtBarcode).requestFocus();
             ((TextView)findViewById(R.id.txtTax)).setText("$0.00");
             ((TextView)findViewById(R.id.txtTotal)).setText("$0.00");
             ((TextView)findViewById(R.id.txtSubTotal)).setText("$0.00");
@@ -508,8 +539,11 @@ public class Distribution extends AppCompatActivity
     {
         if(this.viewIndex > -1)
         {
-            layout.removeView(v);
+            layout.removeView(layout.getChildAt(viewIndex));
             list.remove(this.viewIndex);
+            this.viewIndex = -1;
+            colorRows();
+            updatePrice();
         }
     }
 
