@@ -47,6 +47,7 @@ public class NewItem extends AppCompatActivity
     int sellable = 0; //false
     boolean update = false; // Default to new item
     int new_cat = 0; //false
+    int new_loc = 0; //false
 
     private Database database;
     private static final String TAG = "NewItem";
@@ -160,7 +161,13 @@ public class NewItem extends AppCompatActivity
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
-                currentLoc = locations[position];
+                if (parent.getItemAtPosition(position).equals("New")) {
+                    new_location(view);
+                    new_loc = 1;
+                } else {
+                    new_loc = 0;
+                    currentLoc = locations[position];
+                }
             }
 
             @Override
@@ -181,7 +188,18 @@ public class NewItem extends AppCompatActivity
                 if (new_cat == 0) {
                     edit_category(view);
                 } else {
-                    Toast.makeText(getApplicationContext(), "Cannot be Edited", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Category Cannot be Edited", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        TextView location_view = findViewById(R.id.textView16);
+        location_view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (new_loc == 0) {
+                    edit_location(view);
+                } else {
+                    Toast.makeText(getApplicationContext(), "Location Cannot be Edited", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -485,7 +503,9 @@ public class NewItem extends AppCompatActivity
         }
     }
 
-    /*  clear text in form */
+    /**
+     *  clear text in form
+     */
     public void clear_form (View view){
         EditText Bar = findViewById(R.id.edit_barcode);
         EditText Des = findViewById(R.id.edit_description);
@@ -539,14 +559,16 @@ public class NewItem extends AppCompatActivity
     }
 
     /**
-     * Returns an array fo all location names.
+     * Returns an array of all location names.
      *
      */
     private String[] getLocationStrings() {
         this.locations = this.database.getAllLocations();
-        String[] names = new String[locations.length];
+        int length = locations.length;
+        String[] names = new String[length+1];
+        names[length] = "New";
 
-        for (int i = 0; i < names.length; i++) {
+        for (int i = 0; i < length; i++) {
             names[i] = locations[i].getName();
         }
 
@@ -574,7 +596,7 @@ public class NewItem extends AppCompatActivity
                 //update spinner
                 category_Text = input.getText().toString();
                 database.createCategory(category_Text);
-                //update_cat_spinner(view);
+
                 Spinner category_dropdown = findViewById(R.id.spinner2);
                 String[] categories_spinner = getCategoryStrings();
                 ArrayAdapter<String> category_adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_dropdown_item, categories_spinner);
@@ -591,6 +613,10 @@ public class NewItem extends AppCompatActivity
         builder.show();
     }
 
+    /**
+     * edit category
+     *
+     */
     public void edit_category(final View view) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Edit Category " + currentCat.getName());
@@ -609,7 +635,6 @@ public class NewItem extends AppCompatActivity
                 currentCat.setName(edit_cat_text);
                 database.updateCategory(currentCat);
 
-                //update_cat_spinner(view);
                 Spinner category_dropdown = findViewById(R.id.spinner2);
                 String[] categories_spinner = getCategoryStrings();
                 ArrayAdapter<String> category_adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_dropdown_item, categories_spinner);
@@ -625,11 +650,74 @@ public class NewItem extends AppCompatActivity
         builder.show();
     }
 
-    public void update_cat_spinner(View view) {
-        Spinner category_dropdown = findViewById(R.id.spinner2);
-        String[] categories_spinner = getCategoryStrings();
-        ArrayAdapter<String> category_adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_dropdown_item, categories_spinner);
-        category_dropdown.setAdapter(category_adapter);
-        category_dropdown.setSelection(1);
+    /**
+     *  create new location
+     */
+    private String location_Text = "";
+    private void new_location(final View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Create New Location");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //update spinner
+                location_Text = input.getText().toString();
+                database.createLocation(location_Text);
+
+                Spinner location_dropdown = findViewById(R.id.locSpinner);
+                String[] location_spinner = getLocationStrings();
+                ArrayAdapter<String> location_adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_dropdown_item, location_spinner);
+                location_dropdown.setAdapter(location_adapter);
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+    public void edit_location(final View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Edit Location " + currentLoc.getName());
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                String edit_loc_text = input.getText().toString();
+                currentLoc.setName(edit_loc_text);
+                database.updateLocation(currentLoc);
+
+                Spinner location_dropdown = findViewById(R.id.locSpinner);
+                String[] location_spinner = getLocationStrings();
+                ArrayAdapter<String> location_adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_dropdown_item, location_spinner);
+                location_dropdown.setAdapter(location_adapter);
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        builder.show();
     }
 }
