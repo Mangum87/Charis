@@ -6,6 +6,10 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.text.InputType;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.Gravity;
 import android.widget.AdapterView;
@@ -17,6 +21,7 @@ import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
@@ -41,6 +46,7 @@ public class NewItem extends AppCompatActivity
 {
     int sellable = 0; //false
     boolean update = false; // Default to new item
+    int new_cat = 0; //false
 
     private Database database;
     private static final String TAG = "NewItem";
@@ -73,10 +79,8 @@ public class NewItem extends AppCompatActivity
         //category spinner
         Spinner category_dropdown = findViewById(R.id.spinner2);
         String[] categories_spinner = getCategoryStrings();
-        //TODO - get all categories and print in spinner - uncomment code in fill blanks functions when this is completed
         ArrayAdapter<String> category_adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, categories_spinner);
         category_dropdown.setAdapter(category_adapter);
-        category_dropdown.setSelection(1);
 
         // Location spinner
         Spinner locDropdown = findViewById(R.id.locSpinner);
@@ -136,10 +140,12 @@ public class NewItem extends AppCompatActivity
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
-                currentCat = categories[position];
-
                 if (parent.getItemAtPosition(position).equals("New")) {
                     new_category(view);
+                    new_cat = 1;
+                } else {
+                    new_cat = 0;
+                    currentCat = categories[position];
                 }
             }
 
@@ -167,6 +173,18 @@ public class NewItem extends AppCompatActivity
         condition_dropdown.setOnItemSelectedListener(this.condSpinListener);
         category_dropdown.setOnItemSelectedListener(this.catSpinListener);
         ((Spinner)findViewById(R.id.locSpinner)).setOnItemSelectedListener(this.locSpinListener);
+
+        TextView category_view = findViewById(R.id.textView14);
+        category_view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (new_cat == 0) {
+                    edit_category(view);
+                } else {
+                    Toast.makeText(getApplicationContext(), "Cannot be Edited", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     public void find_item(View view)
@@ -508,13 +526,13 @@ public class NewItem extends AppCompatActivity
     private String[] getCategoryStrings()
     {
         this.categories = this.database.getAllCategories();
-        //this.currentCat = categories[1]; // Default to second on list
         int length = categories.length;
         String[] names = new String[length + 1];
-        names[0] = "New";
+        names[length] = "New";
+
         for(int i = 0; i < length; i++)
         {
-            names[i+1] = categories[i].getName();
+            names[i] = categories[i].getName();
         }
 
         return names;
@@ -553,13 +571,14 @@ public class NewItem extends AppCompatActivity
         builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                //update spinner
                 category_Text = input.getText().toString();
                 database.createCategory(category_Text);
+                //update_cat_spinner(view);
                 Spinner category_dropdown = findViewById(R.id.spinner2);
                 String[] categories_spinner = getCategoryStrings();
                 ArrayAdapter<String> category_adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_dropdown_item, categories_spinner);
                 category_dropdown.setAdapter(category_adapter);
-                category_dropdown.setSelection(1);
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -570,5 +589,47 @@ public class NewItem extends AppCompatActivity
         });
 
         builder.show();
+    }
+
+    public void edit_category(final View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Edit Category " + currentCat.getName());
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                String edit_cat_text = input.getText().toString();
+                currentCat.setName(edit_cat_text);
+                database.updateCategory(currentCat);
+
+                //update_cat_spinner(view);
+                Spinner category_dropdown = findViewById(R.id.spinner2);
+                String[] categories_spinner = getCategoryStrings();
+                ArrayAdapter<String> category_adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_dropdown_item, categories_spinner);
+                category_dropdown.setAdapter(category_adapter);
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        builder.show();
+    }
+
+    public void update_cat_spinner(View view) {
+        Spinner category_dropdown = findViewById(R.id.spinner2);
+        String[] categories_spinner = getCategoryStrings();
+        ArrayAdapter<String> category_adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_dropdown_item, categories_spinner);
+        category_dropdown.setAdapter(category_adapter);
+        category_dropdown.setSelection(1);
     }
 }
