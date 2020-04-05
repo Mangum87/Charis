@@ -5,14 +5,23 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.text.InputType;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.Log;
+import android.view.Gravity;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
@@ -35,9 +44,10 @@ import java.util.Objects;
 
 public class NewItem extends AppCompatActivity
 {
-    //int new_item = 0; //false
     int sellable = 0; //false
     boolean update = false; // Default to new item
+    int new_cat = 0; //false
+    int new_loc = 0; //false
 
     private Database database;
     private static final String TAG = "NewItem";
@@ -52,7 +62,6 @@ public class NewItem extends AppCompatActivity
     private Condition condition; // Current selected condition in spinner
     private Category[] categories; // List of all categories in database
     private Category currentCat; // Current selected category in spinner
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +80,6 @@ public class NewItem extends AppCompatActivity
         //category spinner
         Spinner category_dropdown = findViewById(R.id.spinner2);
         String[] categories_spinner = getCategoryStrings();
-        //TODO - get all categories and print in spinner - uncomment code in fill blanks functions when this is completed
         ArrayAdapter<String> category_adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, categories_spinner);
         category_dropdown.setAdapter(category_adapter);
 
@@ -133,7 +141,13 @@ public class NewItem extends AppCompatActivity
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
-                currentCat = categories[position];
+                if (parent.getItemAtPosition(position).equals("New")) {
+                    new_category(view);
+                    new_cat = 1;
+                } else {
+                    new_cat = 0;
+                    currentCat = categories[position];
+                }
             }
 
             @Override
@@ -147,7 +161,13 @@ public class NewItem extends AppCompatActivity
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
-                currentLoc = locations[position];
+                if (parent.getItemAtPosition(position).equals("New")) {
+                    new_location(view);
+                    new_loc = 1;
+                } else {
+                    new_loc = 0;
+                    currentLoc = locations[position];
+                }
             }
 
             @Override
@@ -160,17 +180,30 @@ public class NewItem extends AppCompatActivity
         condition_dropdown.setOnItemSelectedListener(this.condSpinListener);
         category_dropdown.setOnItemSelectedListener(this.catSpinListener);
         ((Spinner)findViewById(R.id.locSpinner)).setOnItemSelectedListener(this.locSpinListener);
+
+        TextView category_view = findViewById(R.id.textView14);
+        category_view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (new_cat == 0) {
+                    edit_category(view);
+                } else {
+                    Toast.makeText(getApplicationContext(), "Category Cannot be Edited", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        TextView location_view = findViewById(R.id.textView16);
+        location_view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (new_loc == 0) {
+                    edit_location(view);
+                } else {
+                    Toast.makeText(getApplicationContext(), "Location Cannot be Edited", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
-
-
-    /*  send message to user that a new item will be created when the save button is clicked
-     *  set newitem int to 1 to indicate true
-     */
-    /*public void create_new(View view) {
-        String string = "Barcode generated at Save";
-        ((TextView)findViewById(R.id.edit_barcode)).setText(string);
-        new_item = 1;
-    }*/
 
     public void find_item(View view)
     {
@@ -306,7 +339,8 @@ public class NewItem extends AppCompatActivity
         int month = cal.get(Calendar.MONTH) + 1;
         int day = cal.get(Calendar.DAY_OF_MONTH);
         int year = cal.get(Calendar.YEAR);
-        ((TextView)findViewById(R.id.Select_Date)).setText(month + "/" + day + "/" + year);
+        String text = month + "/" + day + "/" + year;
+        ((TextView)findViewById(R.id.Select_Date)).setText(text);
 
         //set the condition on the spinner
         Spinner condition = findViewById(R.id.spinner1);
@@ -362,17 +396,6 @@ public class NewItem extends AppCompatActivity
 
         return -1;
     }
-
-    /*private java.util.Date getDateFromDatePicker (DatePicker datePicker){
-        int day = datePicker.getDayOfMonth();
-        int month = datePicker.getMonth();
-        int year = datePicker.getYear();
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(year, month, day);
-
-        return calendar.getTime();
-    }*/
 
     public void save_data(View view) {
         EditText description = findViewById(R.id.edit_description);
@@ -455,107 +478,246 @@ public class NewItem extends AppCompatActivity
     }
 
 
-        /**
-         * Close the activity
-         */
-        public void return_prev (View view)
-        {
-            this.database.close();
-            this.finish();
+    /**
+     * Close the activity
+     */
+    public void return_prev (View view)
+    {
+        this.database.close();
+        this.finish();
+    }
+
+    public void onRadioButtonClicked (View view){
+        boolean check_clicked = ((RadioButton) view).isChecked();
+        switch (view.getId()) {
+            case R.id.radio_nonsellable:
+                if (check_clicked) {
+                    sellable = 0;//false
+                    break;
+                }
+            case R.id.radio_sellable:
+                if (check_clicked) {
+                    sellable = 1; //true
+                    break;
+                }
         }
+    }
 
-        public void onRadioButtonClicked (View view){
-            boolean check_clicked = ((RadioButton) view).isChecked();
-            switch (view.getId()) {
-                case R.id.radio_nonsellable:
-                    if (check_clicked) {
-                        sellable = 0;//false
-                        break;
-                    }
-                case R.id.radio_sellable:
-                    if (check_clicked) {
-                        sellable = 1; //true
-                        break;
-                    }
-            }
-        }
+    /**
+     *  clear text in form
+     */
+    public void clear_form (View view){
+        EditText Bar = findViewById(R.id.edit_barcode);
+        EditText Des = findViewById(R.id.edit_description);
+        EditText quan = findViewById(R.id.edit_quantity);
+        EditText price = findViewById(R.id.edit_price);
+        EditText source = findViewById(R.id.edit_source);
+        RadioButton Non_Sell = findViewById(R.id.radio_nonsellable);
+        RadioButton Radio_Sell = findViewById(R.id.radio_sellable);
 
-        /*  clear text in form */
-        public void clear_form (View view){
-            EditText Bar = findViewById(R.id.edit_barcode);
-            EditText Des = findViewById(R.id.edit_description);
-            EditText quan = findViewById(R.id.edit_quantity);
-            EditText price = findViewById(R.id.edit_price);
-            EditText source = findViewById(R.id.edit_source);
-            RadioButton Non_Sell = findViewById(R.id.radio_nonsellable);
-            RadioButton Radio_Sell = findViewById(R.id.radio_sellable);
-
-            Bar.getText().clear();
-            Des.getText().clear();
-            quan.getText().clear();
-            price.getText().clear();
-            source.getText().clear();
-
-            //reset calendar
-            /*Calendar c = Calendar.getInstance();
-            int mYear = c.get(Calendar.YEAR);
-            int mMonth = c.get(Calendar.MONTH);
-            int mDay = c.get(Calendar.DAY_OF_MONTH);*/
-
-            this.pickedDate = null;
-            ((TextView)findViewById(R.id.Select_Date)).setText("");
-            findViewById(R.id.edit_barcode).setEnabled(true); // Allow changes
-
-            ((Spinner)findViewById(R.id.spinner1)).setSelection(0);
-            ((Spinner)findViewById(R.id.spinner2)).setSelection(0);
-            ((Spinner)findViewById(R.id.locSpinner)).setSelection(0);
+        Bar.getText().clear();
+        Des.getText().clear();
+        quan.getText().clear();
+        price.getText().clear();
+        source.getText().clear();
 
 
-            Non_Sell.setEnabled(true);
-            Radio_Sell.setEnabled(true);
-            source.setEnabled(true);
+        this.pickedDate = null;
+        ((TextView)findViewById(R.id.Select_Date)).setText("");
+        findViewById(R.id.edit_barcode).setEnabled(true); // Allow changes
 
-            /*DatePickerDialog dialog =
-                    new DatePickerDialog(this, DateSetListener, mYear, mMonth, mDay);
-            dialog.show();*/
-
-        }
+        ((Spinner)findViewById(R.id.spinner1)).setSelection(0);
+        ((Spinner)findViewById(R.id.spinner2)).setSelection(0);
+        ((Spinner)findViewById(R.id.locSpinner)).setSelection(0);
 
 
-        /**
-         * Returns an array of all category
-         * names.
-         * @return Array of category names
-         */
-        private String[] getCategoryStrings()
-        {
-            this.categories = this.database.getAllCategories();
-            //this.currentCat = categories[0]; // Default to first on list
-            String[] names = new String[categories.length];
+        Non_Sell.setEnabled(true);
+        Radio_Sell.setEnabled(true);
+        source.setEnabled(true);
 
-            for(int i = 0; i < names.length; i++)
-            {
-                names[i] = categories[i].getName();
-            }
-
-            return names;
-        }
+    }
 
 
     /**
-     * Returns an array fo all location names.
-     * @return
+     * Returns an array of all category
+     * names.
+     * @return Array of category names
      */
-    private String[] getLocationStrings()
+    private String[] getCategoryStrings()
+    {
+        this.categories = this.database.getAllCategories();
+        int length = categories.length;
+        String[] names = new String[length + 1];
+        names[length] = "New";
+
+        for(int i = 0; i < length; i++)
         {
-            this.locations = this.database.getAllLocations();
-            String[] names = new String[locations.length];
-
-            for(int i = 0; i < names.length; i++)
-            {
-                names[i] = locations[i].getName();
-            }
-
-            return names;
+            names[i] = categories[i].getName();
         }
+
+        return names;
     }
+
+    /**
+     * Returns an array of all location names.
+     *
+     */
+    private String[] getLocationStrings() {
+        this.locations = this.database.getAllLocations();
+        int length = locations.length;
+        String[] names = new String[length+1];
+        names[length] = "New";
+
+        for (int i = 0; i < length; i++) {
+            names[i] = locations[i].getName();
+        }
+
+        return names;
+    }
+
+    /**
+     *  create new category
+     */
+    private String category_Text = "";
+    private void new_category(final View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Create new Category");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //update spinner
+                category_Text = input.getText().toString();
+                database.createCategory(category_Text);
+
+                Spinner category_dropdown = findViewById(R.id.spinner2);
+                String[] categories_spinner = getCategoryStrings();
+                ArrayAdapter<String> category_adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_dropdown_item, categories_spinner);
+                category_dropdown.setAdapter(category_adapter);
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+    /**
+     * edit category
+     *
+     */
+    public void edit_category(final View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Edit Category " + currentCat.getName());
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                String edit_cat_text = input.getText().toString();
+                currentCat.setName(edit_cat_text);
+                database.updateCategory(currentCat);
+
+                Spinner category_dropdown = findViewById(R.id.spinner2);
+                String[] categories_spinner = getCategoryStrings();
+                ArrayAdapter<String> category_adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_dropdown_item, categories_spinner);
+                category_dropdown.setAdapter(category_adapter);
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        builder.show();
+    }
+
+    /**
+     *  create new location
+     */
+    private String location_Text = "";
+    private void new_location(final View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Create New Location");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //update spinner
+                location_Text = input.getText().toString();
+                database.createLocation(location_Text);
+
+                Spinner location_dropdown = findViewById(R.id.locSpinner);
+                String[] location_spinner = getLocationStrings();
+                ArrayAdapter<String> location_adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_dropdown_item, location_spinner);
+                location_dropdown.setAdapter(location_adapter);
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+    public void edit_location(final View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Edit Location " + currentLoc.getName());
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                String edit_loc_text = input.getText().toString();
+                currentLoc.setName(edit_loc_text);
+                database.updateLocation(currentLoc);
+
+                Spinner location_dropdown = findViewById(R.id.locSpinner);
+                String[] location_spinner = getLocationStrings();
+                ArrayAdapter<String> location_adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_dropdown_item, location_spinner);
+                location_dropdown.setAdapter(location_adapter);
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        builder.show();
+    }
+}

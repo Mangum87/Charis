@@ -67,4 +67,11 @@ public class MainActivity extends AppCompatActivity
         Intent intent = new Intent(this, NewItem.class);
         startActivity(intent);
     }
+
+
+    public void openKits(View view)
+    {
+        Intent intent = new Intent(this, KitActivity.class);
+        startActivity(intent);
+    }
 }
