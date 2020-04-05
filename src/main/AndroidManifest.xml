@@ -16,6 +16,10 @@
             android:windowSoftInputMode="stateHidden" />
         <activity android:name=".NewItem"
             android:windowSoftInputMode="stateHidden" />
+
+        <activity android:name=".NewItem" 
+            android:windowSoftInputMode="stateHidden" />
+
         <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
