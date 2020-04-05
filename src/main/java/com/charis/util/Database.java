@@ -871,14 +871,16 @@ public final class Database
 
 
     /**
-     * Creates a kit in the database.
-     * @param id Barcode for kit
+     * Creates a kit in the database. ID is automatically
+     * generated to a 13 character barcode.
      * @param name Name for kit
      * @param descr Description for kit
      * @return Null object if save failed
      */
-    public Kit createKit(String id, String name, String descr)
+    private Kit createKit(String name, String descr)
     {
+        String id = this.makeID();
+
         HashMap<String, Object> map = new HashMap();
         map.put("ID", id);
         map.put("name", name);
@@ -894,14 +896,14 @@ public final class Database
 
 
     /**
-     * Returns the nonsellable items in a given kit.
+     * Returns the items in a given kit.
      * No items in kit will return an empty array.
      * @param kit Kit to search
      * @return Array of items in kit
      */
-    public NonSellableItem[] getItemsFromKit(Kit kit)
+    public Item[] getItemsFromKit(Kit kit)
     {
-        NonSellableItem[] items;
+        Item[] items;
 
         Task t = getDatabase().collection("Kit_Item").whereEqualTo("kit", kit.getID()).get();
         waitForResponse(t);
@@ -910,17 +912,124 @@ public final class Database
         {
             QuerySnapshot snap = (QuerySnapshot) t.getResult();
             List<DocumentSnapshot> docs = snap.getDocuments();
-            items = new NonSellableItem[docs.size()];
+            items = new Item[docs.size()];
 
             for(int i = 0; i < items.length; i++)
             {
-                items[i] = getNonSellableItem(docs.get(i).getString("ID"));
+                if(docs.get(i).getBoolean("sellable"))
+                    items[i] = getSellableItem(docs.get(i).getString("item"));
+                else
+                    items[i] = getNonSellableItem(docs.get(i).getString("item"));
+
+                // Set quantity
+                long quant = docs.get(i).getLong("quantity");
+                items[i].setQuantity(Integer.parseInt(String.valueOf(quant)));
             }
         }
         else
-            items = new NonSellableItem[0];
+            items = new Item[0];
 
         return items;
+    }
+
+
+
+
+    /**
+     * Saves a kit and its associated items.  If the kit does not exist,
+     * a new one will be created. Then,
+     * The item relations with quantities are updated
+     * or created.
+     * @param kit Kit to use - Null for new kit
+     * @param name Name of kit
+     * @param desc Description of kit
+     * @param items List of items to put in kit
+     * @param sellable List of item sellable types. i.e. True for SellableItem type.
+     * @param quantity List of quantities
+     * @return Returns true if the function is executed, not
+     * if the saves were successful.
+     */
+    public boolean saveKit(Kit kit, String name, String desc, Item[] items, boolean[] sellable, int[] quantity)
+    {
+        if(items == null || sellable == null || quantity == null)
+            return false;
+
+        if(items.length != sellable.length && items.length != quantity.length)
+            return false;
+
+        // Does kit exist?
+        if(kit == null || kit.getID().length() != BARCODE_SIZE) // Check if barcode is right
+        {
+            kit = createKit(name, desc); // Make the new kit
+        }
+        else // Update Kit information
+        {
+            updateKit(kit.getID(), name, desc);
+        }
+
+        deleteAllKitItemRelation(kit.getID()); // Delete kit/item relations
+
+        // Save kit items
+        for(int i = 0 ; i < items.length; i++)
+        {
+            createKitItem(kit.getID(), items[i].getID(), quantity[i], sellable[i]);
+            /*DocumentReference ref = isKitItemExist(kit.getID(), items[i].getID());
+            if(ref == null) // Relation doesn't exist
+            {
+                createKitItem(kit.getID(), items[i].getID(), quantity[i], sellable[i]);
+            }
+            else // Update relation attributes
+            {
+                ref.update("quantity", quantity[i]);
+            }*/
+        }
+
+        return true;
+    }
+
+
+
+    /**
+     * Update the name and description of a kit
+     * with the given ID. Update will fail
+     * if the kit doesn't exist.
+     * @param id ID of kit
+     * @param name Name of kit
+     * @param desc Description of kit
+     */
+    private void updateKit(String id, String name, String desc)
+    {
+        DocumentReference ref = getDatabase().collection("Kit").document(id);
+        ref.update("name", name);
+        ref.update("description", desc);
+    }
+
+
+
+    /**
+     * Returns a document reference if the document exists,
+     * otherwise, null is returned.
+     * @param kitID ID of kit
+     * @param itemID ID of item
+     * @return Document reference or null
+     */
+    private DocumentReference isKitItemExist(String kitID, String itemID)
+    {
+        Task t = getDatabase().collection("Kit_Item").whereEqualTo("kit", kitID).whereEqualTo("item", itemID).get();
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot snap = (QuerySnapshot) t.getResult();
+            List<DocumentSnapshot> docs = snap.getDocuments();
+
+            if(docs.size() > 0)
+            {
+                return docs.get(0).getReference();
+            }
+        }
+
+        return null;
     }
 
 
@@ -947,74 +1056,35 @@ public final class Database
     }
 
 
-    /**
-     * Assign the items that belong to a kit.
-     * Using this function will erase all previous nonsellable
-     * items assigned to the kit.
-     * Indices in items and quantities should be parallel.
-     * @param kit Kit to add items to
-     * @param items Array of items to add to kit
-     * @param quantity Array of quantities of each item in var items
-     * @return True on success of save
-     */
-    public boolean createKitItemRelation(Kit kit, NonSellableItem[] items, int[] quantity)
-    {
-        if(items.length != quantity.length) // Must be same lengths
-            return false;
-
-
-        // Delete all relations involving kit
-        boolean suc = deleteKitItemRelation(kit);
-        if(!suc) // If delete failed
-            return false;
-
-        // Create kit/item relation
-        for(int i = 0; i < items.length; i++)
-        {
-            suc = createKitItem(kit, items[i], quantity[i]);
-
-            if(!suc) // if save failed
-                return false;
-        }
-
-
-        return true;
-    }
-
 
     /**
      * Creates the kit/item relation in the Kit_Item collection.
-     * Document name is KitID_ItemID.
-     * @param kit Kit to relate
-     * @param item Item to relate
+     * @param kit Kit ID to relate
+     * @param item Item ID to relate
      * @param quantity Quantity to save
-     * @return True if save successful
      */
-    private boolean createKitItem(Kit kit, Item item, int quantity)
+    private void createKitItem(String kit, String item, int quantity, boolean sellable)
     {
         HashMap<String, Object> map = new HashMap();
-        map.put("item", item.getID());
-        map.put("kit", kit.getID());
+        map.put("item", item);
+        map.put("kit", kit);
         map.put("quantity", quantity);
+        map.put("sellable", sellable);
 
-        String id = kit.getID() + "_" + item.getID();
-        DocumentReference ref = getDatabase().collection("Kit_Item").document(id);
-        Task t = ref.set(map);
-        waitForResponse(t);
-
-        return t.isSuccessful();
+        DocumentReference ref = getDatabase().collection("Kit_Item").document();
+        ref.set(map);
     }
 
 
     /**
-     * Deletes records involving given kit ID from database.
-     * @param kit Kit records to delete
-     * @return True if successful
+     * Deletes all kit/item relations from the database.
+     * @param kitID ID for the kit
+     * @return True if all deletes succeeded
      */
-    private boolean deleteKitItemRelation(Kit kit)
+    public boolean deleteAllKitItemRelation(String kitID)
     {
         // Get all records with kit ID in it
-        Task t = getDatabase().collection("Kit").whereEqualTo("kit", kit.getID()).get();
+        Task t = getDatabase().collection("Kit_Item").whereEqualTo("kit", kitID).get();
         waitForResponse(t);
 
 
@@ -1024,20 +1094,57 @@ public final class Database
             QuerySnapshot snap = (QuerySnapshot) t.getResult();
             List<DocumentSnapshot> docs = snap.getDocuments();
 
-            for(int i = 0; i < docs.size(); i++)
+            if(docs.size() > 0)
             {
-                Task t1 = docs.get(i).getReference().delete(); // Delete document
-                waitForResponse(t1); // Could be faster with task monitor?
+                for(int i = 0; i < docs.size(); i++)
+                {
+                    Task t1 = docs.get(i).getReference().delete(); // Delete document
+                    waitForResponse(t1);
+                    if(!t1.isSuccessful())
+                        return false;
+                }
 
-                if(!t1.isSuccessful())
-                    return false;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    /**
+     * Returns an array of all the kits
+     * in the database. Will never be null.
+     * If no kits exist, function will return
+     * a zero length array.
+     * @return Array of Kit
+     */
+    public Kit[] getAllKits()
+    {
+        Kit[] kits;
+
+        Task t = getDatabase().collection("Kit").get(); // Get all kits
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot snap = (QuerySnapshot) t.getResult();
+            List<DocumentSnapshot> docs = snap.getDocuments();
+            kits = new Kit[docs.size()];
+
+            for(int i = 0; i < kits.length; i++)
+            {
+                String id = docs.get(i).getString("ID");
+                String name = docs.get(i).getString("name");
+                String desc = docs.get(i).getString("description");
+
+                kits[i] = new Kit(id, name, desc);
             }
         }
         else
-            return false; // Not successful
+            kits = new Kit[0];
 
-
-        return true;
+        return kits;
     }
 
 

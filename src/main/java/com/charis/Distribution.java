@@ -91,7 +91,7 @@ public class Distribution extends AppCompatActivity
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count)
             {
-                if(s.length() == 13)
+                if(s.length() == Database.BARCODE_SIZE)
                 {
                     handleBarcode(s.toString());
                 }
