@@ -80,7 +80,7 @@ public abstract class Item
      * Can be negative if reported by DB.
      * @param quantity Quantity in database
      */
-    private void setQuantity(int quantity)
+    public void setQuantity(int quantity)
     {
         this.quantity = quantity;
     }
