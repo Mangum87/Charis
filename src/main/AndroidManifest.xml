@@ -9,12 +9,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".KitActivity"
+        <activity android:name=".ReportActivity"></activity>
+        <activity
+            android:name=".KitActivity"
             android:windowSoftInputMode="stateHidden" />
         <activity
             android:name=".Distribution"
             android:windowSoftInputMode="stateHidden" />
-        <activity android:name=".NewItem"
+        <activity
+            android:name=".NewItem"
             android:windowSoftInputMode="stateHidden" />
         <activity android:name=".LoginActivity">
             <intent-filter>
