@@ -2,12 +2,16 @@ package com.charis;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TableLayout;
@@ -15,9 +19,17 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.charis.data.Distribution;
+import com.charis.data.Item;
 import com.charis.data.NonSellableItem;
 import com.charis.data.SellableItem;
 import com.charis.util.Database;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import static com.charis.Distribution.SALES_TAX;
 
@@ -39,11 +51,14 @@ public class ReportActivity extends AppCompatActivity
     }
 
 
+    /**
+     * Set up the UI components.
+     */
     private void setComponents()
     {
         // Set spinner
         Spinner spin = findViewById(R.id.spinReport);
-        String[] reports = {"Sales Tax", "Inventory Age", "Stock Report", "Net Flow"};
+        String[] reports = {"Sales Tax", "Inventory Age", "Stock Report", "Item Outflow"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, reports);
         spin.setAdapter(adapter);
         spin.setSelection(0); // Set to default value
@@ -59,6 +74,28 @@ public class ReportActivity extends AppCompatActivity
         ArrayAdapter<String> adapter3 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, years);
         spin3.setAdapter(adapter3);
         spin3.setSelection(0); // Set to default value
+
+        // Set spinner listener
+        spin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+        {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            {
+                if(position == 0 || position == 3) // Require month/year
+                {
+                    findViewById(R.id.spinMonth).setEnabled(true);
+                    findViewById(R.id.spinYear).setEnabled(true);
+                }
+                else // Don't require month/year
+                {
+                    findViewById(R.id.spinMonth).setEnabled(false);
+                    findViewById(R.id.spinYear).setEnabled(false);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
     }
 
 
@@ -121,8 +158,8 @@ public class ReportActivity extends AppCompatActivity
             case 2: // Stock Report
                 stockReport();
                 break;
-            case 3: // Net Flow
-                netFlow();
+            case 3: // Outflow
+                outFlow();
                 break;
         }
     }
@@ -207,8 +244,30 @@ public class ReportActivity extends AppCompatActivity
         return total;
     }
 
+
+    /**
+     * Displays an inventory report of
+     * sellable items by received date.
+     */
     private void inventoryAge()
     {
+        // Get sellable items
+        SellableItem[] sell = this.database.getAllSellable();
+        DateFormat format = new SimpleDateFormat("MM/dd/yyyy");
+
+        String[] col = {"ID", "Name", "Quantity", "Received"};
+        addRowToTable(col);
+
+        if(sell != null)
+        {
+            Arrays.sort(sell); // Order by received date
+
+            for(int i = 0; i < sell.length; i++)
+            {
+                String[] sellRow = {sell[i].getID(), sell[i].getDescription(), String.valueOf(sell[i].getQuantity()), format.format(sell[i].getReceived())};
+                addRowToTable(sellRow);
+            }
+        }
     }
 
 
@@ -248,8 +307,52 @@ public class ReportActivity extends AppCompatActivity
         }
     }
 
-    private void netFlow()
+
+    /**
+     * For all items, calculate the outflow
+     * for a give month.
+     */
+    private void outFlow()
     {
+        // Get selected month
+        int month = ((Spinner)findViewById(R.id.spinMonth)).getSelectedItemPosition();
+
+        // Get selected year
+        int year = ((Spinner)findViewById(R.id.spinYear)).getSelectedItemPosition();
+
+        // Get sales records for month
+        int yearOffset = Integer.parseInt((String)((Spinner)findViewById(R.id.spinYear)).getSelectedItem());
+        HashMap<String, Item>[] maps = this.database.getDistItemCountByDate(month, year + yearOffset);
+
+        // Make column header
+        String[] col = {"ID", "Name", "Quantity", "Value"};
+        addRowToTable(col);
+
+        String[] sellCol = {"For Sale", "----", "----", "----"};
+        addRowToTable(sellCol);
+        fillTableMap(maps[0]);
+
+        String[] nonSellCol = {"For Free", "----", "----", "----"};
+        addRowToTable(nonSellCol);
+        fillTableMap(maps[1]);
+    }
+
+
+    /**
+     * Fills the table with the given map information for outFlow().
+     * @param map Map of data
+     */
+    private void fillTableMap(HashMap<String, Item> map)
+    {
+        Collection<Item> c = map.values(); // Get values
+
+        for (Item i : c)
+        {
+            String quant = String.valueOf(i.getQuantity());
+            String value = String.format("$%.2f", (i.getQuantity() * i.getPrice()));
+            String[] col = {i.getID(), i.getDescription(), quant, value};
+            addRowToTable(col);
+        }
     }
 
 

@@ -326,7 +326,7 @@ public class NewItem extends AppCompatActivity
         Spinner location = findViewById(R.id.locSpinner);
 
         //set all editText fields to DB values
-        String item_price = String.format("$%.2f", ITEM.getPrice());
+        String item_price = String.valueOf(ITEM.getPrice());
         price.setText(item_price);
         CharSequence item_quantity = String.valueOf(ITEM.getQuantity());
         quantity.setText(item_quantity);
@@ -401,7 +401,7 @@ public class NewItem extends AppCompatActivity
         EditText description = findViewById(R.id.edit_description);
 
         EditText price = findViewById(R.id.edit_price);
-        double item_price = Double.parseDouble(price.getText().toString());
+        double item_price = Double.parseDouble(price.getText().toString().substring(1));
 
         EditText quantity = findViewById(R.id.edit_quantity);
         int item_quantity = Integer.parseInt(quantity.getText().toString());
