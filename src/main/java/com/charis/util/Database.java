@@ -16,6 +16,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 
@@ -253,6 +254,109 @@ public final class Database
         Date d2 = cal2.getTime();
 
         return getDistributions(cal.getTime(), cal2.getTime());
+    }
+
+
+    /**
+     * Returns an array of hashmaps that hold the
+     * item ID and quantity sold in given
+     * month and year. Quantities are stored
+     * in each item's attribute, quantity.
+     * @param month Month 0-11 for JAN-DEC
+     * @param year Year to search
+     * @return Array containing two hashmaps. [0] for SellableItem, [1] for NonSellableItem
+     */
+    public HashMap<String, Item>[] getDistItemCountByDate(int month, int year)
+    {
+        // Set up hashmaps
+        HashMap<String, Item>[] maps = new HashMap[2];
+        HashMap<String, Item> sellMap = new HashMap<>();
+        HashMap<String, Item> nonsellMap = new HashMap<>();
+        maps[0] = sellMap;
+        maps[1] = nonsellMap;
+
+        Distribution[] dists = getDistributionsByDate(month, year); // Get all dists for month, year
+
+        // Get list of documents for each dist
+        for(int i = 0; i < dists.length; i++)
+        {
+            List<DocumentSnapshot> docs = getDistItemSnapshot(dists[i].getID()); // Get each item from dist_item
+            if(docs != null)
+            {
+                for(int k = 0; k < docs.size(); k++) // Save each in corresponding hashmap, updating quantity
+                {
+                    String itemID = docs.get(k).getString("item");
+                    int quantity = Integer.parseInt(String.valueOf(docs.get(k).getLong("quantity")));
+                    boolean sellable = docs.get(k).getBoolean("sellable");
+
+                    if(sellable)
+                        updateHashmap(sellMap, quantity, itemID, sellable);
+                    else
+                        updateHashmap(nonsellMap, quantity, itemID, sellable);
+                }
+            }
+        }
+
+
+        return maps;
+    }
+
+
+    /**
+     * Update the map with quantity using
+     * id as the key.
+     * @param map Map to update
+     * @param quantity Quantity to increment
+     * @param ID Item ID
+     * @param sellable If the item was sold or given away
+     */
+    private void updateHashmap(HashMap map, int quantity, String ID, boolean sellable)
+    {
+        Item i = (Item)map.get(ID); // Get item
+
+        if(i == null) // New map item
+        {
+            if(sellable)
+                i = getSellableItem(ID);
+            else
+                i = getNonSellableItem(ID);
+
+            if(i != null) // Null if database read failed
+            {
+                i.setQuantity(quantity);
+                map.put(i.getID(), i); // Save new mapping
+            }
+        }
+        else // Update map
+        {
+            int newQuant = quantity + i.getQuantity();
+            i.setQuantity(newQuant);
+            map.put(i.getID(), i);
+        }
+    }
+
+
+    /**
+     * Returns the snapshots of dist_item that have
+     * the distribution ID given.
+     * @param id ID of distribution
+     * @return List of snapshots or null
+     */
+    private List<DocumentSnapshot> getDistItemSnapshot(String id)
+    {
+        CollectionReference ref = getDatabase().collection("Dist_Item");
+
+        Task t = ref.whereEqualTo("dist", id).get();
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot q = (QuerySnapshot) t.getResult();
+            List<DocumentSnapshot> list = q.getDocuments();
+            return list;
+        }
+        else
+            return null;
     }
 
 
@@ -651,6 +755,67 @@ public final class Database
 
 
     /**
+     * Retrieves all of the sellable items from the database.
+     * @return Array of sellable items or null
+     */
+    public SellableItem[] getAllSellable()
+    {
+        SellableItem[] items = null;
+        Task t = getDatabase().collection("Sellable").get(); // Get all documents
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot snap = (QuerySnapshot) t.getResult();
+            List<DocumentSnapshot> docs = snap.getDocuments();
+
+            if(docs.size() > 0)
+            {
+                items = new SellableItem[docs.size()];
+
+                for(int i = 0; i < docs.size(); i++)
+                {
+                    items[i] = getSellableItem(docs.get(i).getId());
+                }
+            }
+        }
+
+
+        return items;
+    }
+
+
+    /**
+     * Retrieves all of the sellable items from the database.
+     * @return Array of sellable items or null
+     */
+    public NonSellableItem[] getAllNonSellable()
+    {
+        NonSellableItem[] items = null;
+        Task t = getDatabase().collection("NonSellable").get(); // Get all documents
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot snap = (QuerySnapshot) t.getResult();
+            List<DocumentSnapshot> docs = snap.getDocuments();
+
+            if(docs.size() > 0)
+            {
+                items = new NonSellableItem[docs.size()];
+
+                for(int i = 0; i < docs.size(); i++)
+                {
+                    items[i] = getNonSellableItem(docs.get(i).getId());
+                }
+            }
+        }
+
+        return items;
+    }
+
+
+    /**
      * Generate a random ID of length
      * BARCODE_SIZE consisting of integers.
      * @return Random ID
@@ -850,6 +1015,11 @@ public final class Database
             map.put("dist", id);
             map.put("quantity", quantity[i]);
 
+            if(item[i] instanceof SellableItem)
+                map.put("sellable", true);
+            else
+                map.put("sellable", false);
+
             // Create dist_item
             DocumentReference ref = getDatabase().collection("Dist_Item").document();
             ref.set(map);
@@ -892,6 +1062,29 @@ public final class Database
         waitForResponse(t);
 
         return new Kit(id, name, descr);
+    }
+
+
+    /**
+     * Returns the kit with the given barcode ID.
+     * Will return null if no kit is found.
+     * @param id ID of kit
+     * @return Kit object or null
+     */
+    public Kit getKit(String id)
+    {
+        Task t = getDatabase().collection("Kit").document(id).get();
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            DocumentSnapshot snapshot = (DocumentSnapshot) t.getResult();
+            String desc = snapshot.getString("description");
+            String name = snapshot.getString("name");
+            return new Kit(id, name, desc);
+        }
+
+        return null;
     }
 
 
@@ -973,15 +1166,6 @@ public final class Database
         for(int i = 0 ; i < items.length; i++)
         {
             createKitItem(kit.getID(), items[i].getID(), quantity[i], sellable[i]);
-            /*DocumentReference ref = isKitItemExist(kit.getID(), items[i].getID());
-            if(ref == null) // Relation doesn't exist
-            {
-                createKitItem(kit.getID(), items[i].getID(), quantity[i], sellable[i]);
-            }
-            else // Update relation attributes
-            {
-                ref.update("quantity", quantity[i]);
-            }*/
         }
 
         return true;
@@ -1002,34 +1186,6 @@ public final class Database
         DocumentReference ref = getDatabase().collection("Kit").document(id);
         ref.update("name", name);
         ref.update("description", desc);
-    }
-
-
-
-    /**
-     * Returns a document reference if the document exists,
-     * otherwise, null is returned.
-     * @param kitID ID of kit
-     * @param itemID ID of item
-     * @return Document reference or null
-     */
-    private DocumentReference isKitItemExist(String kitID, String itemID)
-    {
-        Task t = getDatabase().collection("Kit_Item").whereEqualTo("kit", kitID).whereEqualTo("item", itemID).get();
-        waitForResponse(t);
-
-        if(t.isSuccessful())
-        {
-            QuerySnapshot snap = (QuerySnapshot) t.getResult();
-            List<DocumentSnapshot> docs = snap.getDocuments();
-
-            if(docs.size() > 0)
-            {
-                return docs.get(0).getReference();
-            }
-        }
-
-        return null;
     }
 
 
