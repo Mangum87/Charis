@@ -14,10 +14,8 @@ import android.widget.EditText;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.charis.data.Item;
-import com.charis.data.Kit;
 import com.charis.data.NonSellableItem;
 import com.charis.data.SellableItem;
 import com.charis.data.User;
@@ -50,7 +48,6 @@ public class Distribution extends AppCompatActivity
         this.db = new Database(); // Get instance of database
         this.user = (User)getIntent().getSerializableExtra("user");
         this.layout = (TableLayout)findViewById(R.id.tablelayout);
-        findViewById(R.id.btnDelete).setEnabled(false);
         this.viewIndex = -1;
         this.list = new ArrayList<Item>(20);
         setHeader(); // Create the table header
@@ -110,7 +107,6 @@ public class Distribution extends AppCompatActivity
     {
         this.viewIndex = findViewIndex(v); // Get index of clicked row
         colorRows();
-        findViewById(R.id.btnDelete).setEnabled(true);
     }
 
 
@@ -139,10 +135,8 @@ public class Distribution extends AppCompatActivity
      */
     private void handleBarcode(String id)
     {
-        // Look for item
-        NonSellableItem nonSell = db.getNonSellableItem(id);
+        NonSellableItem nonSell = db.getNonSellableItem(id); // Look for item
         SellableItem sell = db.getSellableItem(id);
-        Kit kit = db.getKit(id);
 
         if(sell != null)
         {
@@ -164,14 +158,12 @@ public class Distribution extends AppCompatActivity
             else // Only sell exists
                 addToTable(sell); // Launch for sell
         }
-        else if(nonSell != null) // Only nonSell exists
+        else
         {
-            addToTable(nonSell); // Launch for nonSell
-        }
-        else // Kit
-        {
-            if(kit != null)
-                addFromKit(kit); // Add items from kit
+            if(nonSell != null) // Only nonSell exists
+            {
+                addToTable(nonSell); // Launch for nonSell
+            }
         }
 
 
@@ -180,21 +172,6 @@ public class Distribution extends AppCompatActivity
         // Reset TextView
         ((TextView)findViewById(R.id.txtBarcode)).setText("");
         findViewById(R.id.txtBarcode).requestFocus();
-    }
-
-
-    /**
-     * Add items from a kit to the table.
-     * @param kit Kit to load from
-     */
-    private void addFromKit(Kit kit)
-    {
-        Item[] items = db.getItemsFromKit(kit); // Get items
-
-        for(int i = 0; i < items.length; i++)
-        {
-            addToTable(items[i]);
-        }
     }
 
 
@@ -441,8 +418,6 @@ public class Distribution extends AppCompatActivity
         if(this.list.size() == 0) // Table has to have something
             return;
 
-        findViewById(R.id.btnFinish).setEnabled(false);
-
         ArrayList<SellableItem> sellItem = new ArrayList<SellableItem>(this.list.size());
         ArrayList sellCount = new ArrayList(this.list.size());
 
@@ -492,10 +467,7 @@ public class Distribution extends AppCompatActivity
             ((TextView)findViewById(R.id.txtTax)).setText("$0.00");
             ((TextView)findViewById(R.id.txtTotal)).setText("$0.00");
             ((TextView)findViewById(R.id.txtSubTotal)).setText("$0.00");
-            Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show();
         }
-
-        findViewById(R.id.btnFinish).setEnabled(true);
     }
 
 
@@ -572,7 +544,6 @@ public class Distribution extends AppCompatActivity
             this.viewIndex = -1;
             colorRows();
             updatePrice();
-            findViewById(R.id.btnDelete).setEnabled(false);
         }
     }
 

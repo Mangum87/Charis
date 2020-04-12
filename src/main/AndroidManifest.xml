@@ -9,7 +9,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ReportActivity"></activity>
+        <activity android:name=".user"></activity>
         <activity
             android:name=".KitActivity"
             android:windowSoftInputMode="stateHidden" />

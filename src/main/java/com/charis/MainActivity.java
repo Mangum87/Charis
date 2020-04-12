@@ -74,4 +74,10 @@ public class MainActivity extends AppCompatActivity
         Intent intent = new Intent(this, KitActivity.class);
         startActivity(intent);
     }
+
+    public void openUsers(View view)
+    {
+        Intent intent = new Intent(this, user.class);
+        startActivity(intent);
+    }
 }
