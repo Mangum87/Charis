@@ -7,7 +7,7 @@ import java.util.Date;
 /**
  * Encapsulates properties for items in inventory.
  */
-public abstract class Item
+public abstract class Item implements Comparable
 {
     private final String ID;
     private Date received;
@@ -133,5 +133,12 @@ public abstract class Item
     {
         if(location != null)
             this.location = location;
+    }
+
+    @Override
+    public int compareTo(Object o)
+    {
+        SellableItem item = (SellableItem)o;
+        return received.compareTo(item.getReceived());
     }
 }
