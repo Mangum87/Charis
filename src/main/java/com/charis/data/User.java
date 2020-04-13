@@ -7,8 +7,8 @@ import java.io.Serializable;
 public final class User implements Serializable
 {
     private final String username;
-    private final String firstName;
-    private final String lastName;
+    private String firstName;
+    private String lastName;
     private String password;
     private boolean admin; // Is the user an admin?
     private boolean active; // Inactive accounts cannot log in
@@ -39,8 +39,18 @@ public final class User implements Serializable
         return username;
     }
 
+    public void setFirstName(String s)
+    {
+        this.firstName = s;
+    }
+
     public String getFirstName() {
         return firstName;
+    }
+
+    public void setLastName(String s)
+    {
+        this.lastName = s;
     }
 
     public String getLastName() {
@@ -51,7 +61,8 @@ public final class User implements Serializable
         return password;
     }
 
-    public void setPassword(String password) {
+    public void setPassword(String password)
+    {
         this.password = password;
     }
 
