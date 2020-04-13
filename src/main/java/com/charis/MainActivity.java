@@ -37,12 +37,12 @@ public class MainActivity extends AppCompatActivity
 
 
     /**
-     * Opens thte inventory activity
+     * Opens thte report activity.
      * @param view
      */
-    public void openInventory(View view)
+    public void openReport(View view)
     {
-        Intent intent = new Intent(this, Inventory.class);
+        Intent intent = new Intent(this, ReportActivity.class);
         startActivity(intent);
     }
 
@@ -69,12 +69,21 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    /**
+     * Opens the kit activity.
+     * @param view
+     */
     public void openKits(View view)
     {
         Intent intent = new Intent(this, KitActivity.class);
         startActivity(intent);
     }
 
+
+    /**
+     * Opens the user activity
+     * @param view
+     */
     public void openUsers(View view)
     {
         Intent intent = new Intent(this, user.class);
