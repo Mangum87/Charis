@@ -209,14 +209,16 @@ public final class Database
      * @param amount Total + tax of transaction
      * @param date Date of transaction
      * @param user User who performed transaction
+     * @param memo Memo for the distribution
      * @return Distribution object with given data
      */
-    private Distribution createDistribution(double amount, Date date, User user)
+    private Distribution createDistribution(double amount, Date date, User user, String memo)
     {
         HashMap<String, Object> map = new HashMap();
         map.put("amount", amount);
         map.put("date", new Timestamp(date));
         map.put("user", user.getUsername());
+        map.put("memo", memo);
 
         Task t = getDatabase().collection("Distribution").add(map);
         waitForResponse(t);
@@ -602,6 +604,42 @@ public final class Database
 
 
     /**
+     * Returns a hashmap of all unique item IDs and their
+     * corresponding descriptions. Key = ID, Val = description.
+     * Will return null if no items exist or process fails.
+     * @return Hashmap of all unique item IDs.
+     */
+    public HashMap<String, String> getUniqueItems()
+    {
+        Task t = getDatabase().collection("Item").get();
+        waitForResponse(t);
+
+        if(t.isSuccessful())
+        {
+            QuerySnapshot shot = (QuerySnapshot) t.getResult();
+            List<DocumentSnapshot> docs = shot.getDocuments();
+
+            if(docs.size() > 0)
+            {
+                HashMap<String, String> map = new HashMap<>(docs.size());
+                String key, val;
+
+                for(int i = 0; i < docs.size(); i++)
+                {
+                    key = docs.get(i).getString("ID"); // Get key
+                    val = docs.get(i).getString("description"); // Get value
+                    map.put(key, val); // Add to map
+                }
+
+                return map;
+            }
+        }
+
+        return null;
+    }
+
+
+    /**
      * Creates a sellable item in the database.
      * ID of the item is generated.
      * @param rec Date received
@@ -965,13 +1003,13 @@ public final class Database
      * @param user User who performed sale
      * @return True if successful
      */
-    public boolean createDistItemRelation(SellableItem[] sell, int[] sellQuant, NonSellableItem[] nonSell, int[] nonSellQuant, double amount, Date date, User user)
+    public boolean createDistItemRelation(SellableItem[] sell, int[] sellQuant, NonSellableItem[] nonSell, int[] nonSellQuant, double amount, Date date, User user, String memo)
     {
         if((sell.length != sellQuant.length) || (nonSell.length != nonSellQuant.length)) // Stop if arrays are different lengths
             return false;
 
 
-        Distribution dist = createDistribution(amount, date, user); // Make distribution
+        Distribution dist = createDistribution(amount, date, user, memo); // Make distribution
         if(dist == null)
             return false;
 
@@ -1124,7 +1162,6 @@ public final class Database
 
         return items;
     }
-
 
 
 
@@ -1311,12 +1348,6 @@ public final class Database
     private void waitForResponse(Task t)
     {
         // Spin lock for now
-        while(!t.isComplete())
-        {
-            /*try { Tasks.await(t, 10, TimeUnit.MILLISECONDS); } // Max 20ms wait time
-            catch (InterruptedException e) { e.printStackTrace(); }
-            catch (TimeoutException e) { e.printStackTrace(); }
-            catch (ExecutionException e) { e.printStackTrace(); }*/
-        }
+        while(!t.isComplete()) {}
     }
 }
