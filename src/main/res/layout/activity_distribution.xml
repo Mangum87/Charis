@@ -9,12 +9,12 @@
         android:id="@+id/txtBarcode"
         android:layout_width="157dp"
         android:layout_height="43dp"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:layout_marginRight="45dp"
         android:layout_marginLeft="15dp"
         android:layout_marginTop="50dp"
-        tools:text="Barcode" />
+        android:layout_marginRight="45dp"
+        android:ems="10"
+        android:hint="Barcode"
+        android:inputType="textPersonName" />
 
     <Button
         android:id="@+id/btnFinish"
@@ -70,9 +70,17 @@
         android:layout_height="wrap_content"
         android:id="@+id/footer"
         android:gravity="center_horizontal"
-        android:layout_marginBottom="30dp"
-        android:layout_above="@+id/txtSubTotal"
-        />
+        android:layout_marginBottom="20dp"
+        android:layout_above="@+id/txtMemo" />
+
+    <EditText
+        android:id="@+id/txtMemo"
+        android:layout_width="300dp"
+        android:layout_height="45dp"
+        android:layout_above="@+id/textView4"
+        android:layout_marginStart="40dp"
+        android:layout_marginBottom="20dp"
+        android:hint="Memo" />
 
     <TextView
         android:id="@+id/textView4"
