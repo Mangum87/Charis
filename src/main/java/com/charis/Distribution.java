@@ -480,8 +480,9 @@ public class Distribution extends AppCompatActivity
         int[] c1 = toArrayI(sellCount.toArray());
         NonSellableItem[] i2 = toArrayNS(nonsellItem.toArray());
         int[] c2 = toArrayI(nonsellCount.toArray());
+        String memo = ((EditText)findViewById(R.id.txtMemo)).getText().toString();
 
-        boolean suc = this.db.createDistItemRelation(i1, c1, i2, c2, total, new Date(), this.user);
+        boolean suc = this.db.createDistItemRelation(i1, c1, i2, c2, total, new Date(), this.user, memo);
 
         // Reset frame components
         if(suc)
