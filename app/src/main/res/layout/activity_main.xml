@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+	<TextView
+		android:id="@+id/textView15"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="Kit"
+		android:textColor="#000"
+		android:textSize="18dp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintHorizontal_bias="0.745"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:layout_constraintVertical_bias="0.622" />
+
+	<TextView
+		android:id="@+id/textView13"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="Report"
+		android:textColor="#000"
+		android:textSize="18dp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintHorizontal_bias="0.251"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:layout_constraintVertical_bias="0.850" />
+
+	<TextView
+		android:id="@+id/textView12"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="Sell"
+		android:textColor="#000"
+		android:textSize="18dp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintHorizontal_bias="0.27"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:layout_constraintVertical_bias="0.622" />
+
+	<TextView
+		android:id="@+id/textView11"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="Users"
+		android:textColor="#000"
+		android:textSize="18dp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintHorizontal_bias="0.758"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:layout_constraintVertical_bias="0.394" />
+
+	<TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Charis Inventory Management"
+        android:textColor="#000"
+        android:textSize="22dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.127" />
+
+	<TextView
+		android:id="@+id/textView10"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="Inventory"
+		android:textColor="#000"
+		android:textSize="18dp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintHorizontal_bias="0.243"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:layout_constraintVertical_bias="0.394" />
+
+	<ImageButton
+		android:id="@+id/imageButton"
+		android:layout_width="129dp"
+		android:layout_height="81dp"
+		android:onClick="openUsers"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintHorizontal_bias="0.833"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:layout_constraintVertical_bias="0.292"
+		app:srcCompat="@drawable/user" />
+
+	<ImageButton
+        android:id="@+id/imageButton2"
+        android:layout_width="129dp"
+        android:layout_height="82dp"
+        android:onClick="openDistribution"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.187"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.542"
+        app:srcCompat="@drawable/sell" />
+
+	<ImageButton
+		android:id="@+id/imageButton3"
+		android:layout_width="128dp"
+		android:layout_height="81dp"
+		android:onClick="openNewItem"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintHorizontal_bias="0.19"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:layout_constraintVertical_bias="0.292"
+		app:srcCompat="@drawable/inventory" />
+
+	<ImageButton
+        android:id="@+id/imageButton5"
+        android:layout_width="128dp"
+        android:layout_height="80dp"
+		android:onClick="openReport"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.187"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.791"
+        app:srcCompat="@drawable/report" />
+
+	<ImageButton
+		android:id="@+id/imageButton6"
+		android:layout_width="129dp"
+		android:layout_height="81dp"
+		android:onClick="openKits"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintHorizontal_bias="0.833"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:layout_constraintVertical_bias="0.543"
+		app:srcCompat="@drawable/kit" />
+
+    <Button
+        android:id="@+id/button7"
+        android:layout_width="89dp"
+        android:layout_height="36dp"
+        android:onClick="logout"
+        android:text="EXIT"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.984"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.008" />
+
+	<ImageButton
+		android:id="@+id/btnPrint"
+		android:layout_width="128dp"
+		android:layout_height="80dp"
+		android:onClick="openPrint"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintHorizontal_bias="0.83"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:layout_constraintVertical_bias="0.791"
+		app:srcCompat="@drawable/printer" />
+
+	<TextView
+		android:id="@+id/textView28"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="Print"
+		android:textColor="#000"
+		android:textSize="18dp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintHorizontal_bias="0.748"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:layout_constraintVertical_bias="0.850"
+		tools:text="Print" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

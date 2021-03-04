@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Distribution">
+
+    <EditText
+        android:id="@+id/txtBarcode"
+        android:layout_width="157dp"
+        android:layout_height="43dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginRight="45dp"
+        android:ems="10"
+        android:hint="Barcode"
+        android:inputType="textPersonName" />
+
+    <Button
+        android:id="@+id/btnFinish"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/txtBarcode"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="50dp"
+        android:text="Checkout"
+        android:onClick="checkoutItems"/>
+
+    <Button
+        android:id="@+id/btnClose"
+        android:layout_width="88dp"
+        android:layout_height="36dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_toRightOf="@+id/btnFinish"
+        android:onClick="closeForm"
+        android:text="Close" />
+
+
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/header"
+        android:layout_above="@+id/footer">
+
+        <TableLayout
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:id="@+id/tablelayout"
+            android:stretchColumns="*" />
+    </ScrollView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:id="@+id/header"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/txtBarcode">
+
+        <TableLayout
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:id="@+id/headerlayout"
+            android:stretchColumns="*"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/footer"
+        android:gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:layout_above="@+id/txtMemo" />
+
+    <EditText
+        android:id="@+id/txtMemo"
+        android:layout_width="300dp"
+        android:layout_height="45dp"
+        android:layout_above="@+id/textView4"
+        android:layout_marginStart="40dp"
+        android:layout_marginBottom="20dp"
+        android:hint="Memo" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sub Total:"
+        android:textColor="#000"
+        android:textSize="18dp"
+        android:layout_above="@+id/textView6"
+        android:layout_marginBottom="5dp"
+        android:layout_marginLeft="44dp"/>
+
+    <TextView
+        android:id="@+id/txtSubTotal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="$0.00"
+        android:textColor="#000"
+        android:textSize="18dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginBottom="5dp"
+        android:layout_above="@+id/txtTax"
+        android:layout_toRightOf="@+id/textView4"/>
+
+    <TextView
+        android:id="@+id/textView6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tax:"
+        android:textColor="#000"
+        android:textSize="18dp"
+        android:layout_above="@+id/textView8"
+        android:layout_marginBottom="5dp"
+        android:layout_marginLeft="91dp"/>
+
+    <TextView
+        android:id="@+id/txtTax"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="$0.00"
+        android:textColor="#000"
+        android:textSize="18dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginBottom="5dp"
+        android:layout_above="@+id/txtTotal"
+        android:layout_toRightOf="@+id/textView6"/>
+
+    <TextView
+        android:id="@+id/textView8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total:"
+        android:textColor="#000"
+        android:textSize="18dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="80dp"
+        android:layout_marginLeft="80dp" />
+
+    <TextView
+        android:id="@+id/txtTotal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="$0.00"
+        android:textSize="18dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="80dp"
+        android:layout_marginLeft="10dp"
+        android:layout_toRightOf="@+id/textView8"
+        android:textColor="#000" />
+
+    <Button
+        android:id="@+id/btnDelete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="50dp"
+        android:layout_toRightOf="@+id/btnFinish"
+        android:onClick="deleteItem" />
+
+</RelativeLayout>
